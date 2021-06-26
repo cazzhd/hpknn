@@ -12,7 +12,7 @@
 # @file Makefile
 # @author Francisco Rodríguez Jiménez
 # @date 26/06/2021
-# @brief IFile with the necessary rules to compile the project. Also, documentation is generated
+# @brief File with the necessary rules to compile the project. Also, documentation is generated
 # @copyright Hpknn (c) 2015 EFFICOMP
 
 # ************ Vars ************
