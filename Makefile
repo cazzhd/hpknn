@@ -66,7 +66,7 @@ $(FOLDERS_CREATE):
 
 # ************ Compilation of modules ************
 
-$(OBJECTS): $(SOURCES)
+$(OBJ)/%.o: $(SRC)/%.cpp
 	@echo "\e[33mCompiling module $< \e[0m"
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $<  -o $@
 

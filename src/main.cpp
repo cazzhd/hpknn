@@ -19,10 +19,8 @@
 
 /********************************* Includes *******************************/
 
-#include <fstream>
-#include <iostream>
-#include <sstream>
-#include <string>
+#include <db.h>
+#include <stdlib.h>
 
 /********************************* Main ********************************/
 
@@ -32,41 +30,7 @@
  * @param argv Arguments of the program
  */
 int main(const int argc, const char **argv) {
-    std::ifstream db_file;
-    std::string line;
-
-    db_file.open("db/data_essex_3600_x110_plus_class.txt");
-
-    /********** Getting the database dimensions ***********/
-
-    if (db_file.is_open()) {
-        float dato;
-        unsigned int n_cols = 0, n_rows = 1;
-
-        getline(db_file, line);
-        std::stringstream ss(line);
-        while (ss >> dato) {
-            ++n_cols;
-        }
-
-        while (getline(db_file, line)) {
-            ++n_rows;
-            std::stringstream ss(line);
-            unsigned tmp_ncols = 0;
-            while (ss >> dato) {
-                ++tmp_ncols;
-            }
-
-            if (tmp_ncols != n_cols) return EXIT_FAILURE;
-        }
-
-        std::cout << "ROWS: " << n_rows << std::endl;
-        std::cout << "COLS: " << n_cols << std::endl;
-
-        db_file.close();
-    } else {
-        std::cout << "No esta abierto" << std::endl;
-    }
+    getDB();
 
     return EXIT_SUCCESS;
 }

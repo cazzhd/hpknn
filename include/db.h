@@ -4,8 +4,9 @@
  *
  * This work has been funded by:
  *
- * Spanish 'Ministerio de Economía y Competitividad' under grants number TIN2012-32039 and TIN2015-67020-P.\n
- * Spanish 'Ministerio de Ciencia, Innovación y Universidades' under grant number PGC2018-098813-B-C31.\n
+ * Spanish 'Ministerio de Economía y Competitividad' under grants number
+ * TIN2012-32039 and TIN2015-67020-P.\n Spanish 'Ministerio de Ciencia,
+ * Innovación y Universidades' under grant number PGC2018-098813-B-C31.\n
  * European Regional Development Fund (ERDF).
  *
  * @file db.h
@@ -24,5 +25,10 @@
 
 /********************************* Methods ********************************/
 
+/**
+ * @brief Read the EGG Database
+ * @return Dinamic vector of float with content of db
+ */
+void getDB();
 
-#endif BD_H
+#endif
