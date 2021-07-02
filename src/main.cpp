@@ -19,8 +19,11 @@
 
 /********************************* Includes *******************************/
 
-#include <db.h>
 #include <stdlib.h>
+
+#include <iostream>
+
+#include "db.h"
 
 /********************************* Main ********************************/
 
@@ -29,8 +32,9 @@
  * @param argc The number of arguments of the program
  * @param argv Arguments of the program
  */
-int main(const int argc, const char **argv) {
-    getDB();
+int main(const int argc, const char** argv) {
+    BBDD db = BBDD();
+    std::cout << "Tamaño de la bd: " << db.getnCols() << std::endl;
 
     return EXIT_SUCCESS;
 }

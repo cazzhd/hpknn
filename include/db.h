@@ -26,9 +26,27 @@
 /********************************* Methods ********************************/
 
 /**
- * @brief Read the EGG Database
- * @return Dinamic vector of float with content of db
+ * @brief Class of BBDD that permit read the EGG Database
  */
-void getDB();
+class BBDD {
+   private:
+    /********** Attributes ***********/
+    // static BBDD* instance;
+    unsigned int nRows;
+    unsigned int nCols;
+    int sizeBBDD;
+    float* db;
+    /********** Methods ***********/
+
+   public:
+    /********** Methods ***********/
+    BBDD();
+    ~BBDD();
+    // static BBDD* getInstance();
+    unsigned int getnRows();
+    unsigned int getnCols();
+    int getsizeBBDD();
+    float* getDB();
+};
 
 #endif

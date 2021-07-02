@@ -27,7 +27,7 @@
 
 /********************************* Methods ********************************/
 
-void getDB() {
+BBDD::BBDD() {
     std::ifstream db_file;
     std::string line;
 
@@ -56,11 +56,88 @@ void getDB() {
             if (tmp_ncols != n_cols) exit(EXIT_FAILURE);
         }
 
-        std::cout << "ROWS: " << n_rows << std::endl;
-        std::cout << "COLS: " << n_cols << std::endl;
+        int db_size = n_rows * n_cols;
+        float* data_db = new float[db_size];
+        db_file.clear();
+        db_file.seekg(0);
+        for (int i = 0; i < db_size; ++i) {
+            db_file >> data_db[i];
+        }
 
         db_file.close();
+
+        this->nRows = n_rows;
+        this->nCols = n_cols;
+        this->sizeBBDD = db_size;
+        this->db = data_db;
     } else {
         std::cout << "No esta abierto" << std::endl;
     }
 }
+
+BBDD::~BBDD() {
+    delete[] this->db;
+}
+
+unsigned int BBDD::getnRows() {
+    return this->nRows;
+}
+
+unsigned int BBDD::getnCols() {
+    return this->nCols;
+}
+
+int BBDD::getsizeBBDD() {
+    return this->sizeBBDD;
+}
+
+float* BBDD::getDB() {
+    return this->db;
+}
+
+// float* getDB() {
+//     std::ifstream db_file;
+//     std::string line;
+
+//     db_file.open("db/data_essex_3600_x110_plus_class.txt");
+
+//     /********** Getting the database dimensions ***********/
+
+//     if (db_file.is_open()) {
+//         float dato;
+//         unsigned int n_cols = 0, n_rows = 1;
+
+//         getline(db_file, line);
+//         std::stringstream ss(line);
+//         while (ss >> dato) {
+//             ++n_cols;
+//         }
+
+//         while (getline(db_file, line)) {
+//             ++n_rows;
+//             std::stringstream ss(line);
+//             unsigned tmp_ncols = 0;
+//             while (ss >> dato) {
+//                 ++tmp_ncols;
+//             }
+
+//             if (tmp_ncols != n_cols) exit(EXIT_FAILURE);
+//         }
+
+//         int db_size = n_rows * n_cols;
+//         float* data_db = new float[db_size];
+//         db_file.clear();
+//         db_file.seekg(0);
+//         for (int i = 0; i < db_size; ++i) {
+//             db_file >> data_db[i];
+//         }
+
+//         std::cout << "ROWS: " << n_rows << std::endl;
+//         std::cout << "COLS: " << n_cols << std::endl;
+
+//         db_file.close();
+//         return data_db;
+//     } else {
+//         std::cout << "No esta abierto" << std::endl;
+//     }
+// }
