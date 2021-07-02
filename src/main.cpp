@@ -23,6 +23,7 @@
 
 #include <iostream>
 
+#include "config.h"
 #include "db.h"
 
 /********************************* Main ********************************/
@@ -33,8 +34,11 @@
  * @param argv Arguments of the program
  */
 int main(const int argc, const char** argv) {
-    BBDD db = BBDD();
-    std::cout << "Tamaño de la bd: " << db.getnCols() << std::endl;
+    // BBDD db = BBDD();
+    // float* db_data = db.getDB();
+
+    Config config;
+    std::cout << config << std::endl;
 
     return EXIT_SUCCESS;
 }

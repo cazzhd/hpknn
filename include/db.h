@@ -31,7 +31,6 @@
 class BBDD {
    private:
     /********** Attributes ***********/
-    // static BBDD* instance;
     unsigned int nRows;
     unsigned int nCols;
     int sizeBBDD;
@@ -42,11 +41,12 @@ class BBDD {
     /********** Methods ***********/
     BBDD();
     ~BBDD();
-    // static BBDD* getInstance();
     unsigned int getnRows();
     unsigned int getnCols();
     int getsizeBBDD();
     float* getDB();
 };
+
+float* getDBfunction();
 
 #endif
