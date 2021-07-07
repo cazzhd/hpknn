@@ -25,6 +25,9 @@
 
 /******************************** Constants *******************************/
 
+const char* const CFG_ERROR_PARSE_ARGUMENTS =
+    "Error: Missing required value of the argument or nothing to parse";
+
 /******************************** Structures ******************************/
 typedef struct Config {
     std::string dbFilenameTest;
@@ -33,9 +36,11 @@ typedef struct Config {
     int nFeatures;
 
     /********************************* Methods ********************************/
-    Config();
+    Config(const int argc, const char** argv);
     ~Config();
     friend std::ostream& operator<<(std::ostream& os, const Config& o);
 } Config;
+
+void check(const bool cond, const char* const format, ...);
 
 #endif

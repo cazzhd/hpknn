@@ -41,7 +41,7 @@ class BBDD {
 
    public:
     /********** Methods ***********/
-    BBDD(const Config& conf);
+    BBDD(const char* filename, const Config& conf);
     ~BBDD();
     unsigned int getnRows();
     unsigned int getnCols();

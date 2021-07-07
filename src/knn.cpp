@@ -1,6 +1,6 @@
 /**
  * This file is subject to the terms and conditions defined in
- * file 'LICENSE', which is part of Hpmoon repository.
+ * file 'LICENSE', which is part of Hpknn repository.
  *
  * This work has been funded by:
  *
@@ -9,27 +9,26 @@
  * Innovación y Universidades' under grant number PGC2018-098813-B-C31.\n
  * European Regional Development Fund (ERDF).
  *
- * @file knn.h
+ * @file knn.cpp
  * @author Francisco Rodríguez Jiménez
- * @date 26/06/2021
- * @brief Function declarations of the knn algorithm
- * @copyright Hpmoon (c) 2015 EFFICOMP
+ * @date 07/07/2021
+ * @brief Implementation of the KNN
+ * @copyright Hpknn (c) 2015 EFFICOMP
  */
 
-#ifndef KNN_H
-#define KNN_H
-
 /********************************* Includes *******************************/
+
+#include "knn.h"
 
 /******************************** Constants *******************************/
 
 /********************************* Methods ********************************/
 
 void KNN(unsigned int K, const float& dataTraining, const float& dataTest,
-         double (*distanceFunction)());
+         double (*distanceFunction)()) {}
 
-double getEuclideanDistance();
-double getManhattan();
-double getMinkowski();
+double getEuclideanDistance() {}
 
-#endif
+double getManhattan() {}
+
+double getMinkowski() {}

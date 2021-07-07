@@ -34,11 +34,20 @@
  * @param argv Arguments of the program
  */
 int main(const int argc, const char** argv) {
-    const Config config;
+    Config config(argc, argv);
 
-    BBDD db = BBDD(config);
-    float* db_data = db.getDB();
-    std::cout << db_data[0] << std::endl;
+    BBDD dbTrain = BBDD(config.dbFilenameTrain.c_str(), config);
+    BBDD dbTest = BBDD(config.dbFilenameTest.c_str(), config);
+
+    std::cout << "Info dbTrain" << std::endl;
+    std::cout << "Ncols: " << dbTrain.getnCols() << std::endl;
+    std::cout << "Nrows: " << dbTrain.getnRows() << std::endl;
+    std::cout << "Size: " << dbTrain.getsizeBBDD() << std::endl;
+
+    std::cout << "\nInfo dbTest" << std::endl;
+    std::cout << "Ncols: " << dbTest.getnCols() << std::endl;
+    std::cout << "Nrows: " << dbTest.getnRows() << std::endl;
+    std::cout << "Size: " << dbTest.getsizeBBDD() << std::endl;
 
     return EXIT_SUCCESS;
 }

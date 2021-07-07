@@ -24,13 +24,45 @@
 #include <iostream>
 #include <sstream>
 
+#include "cmdParser.h"
 #include "struct_mapping/struct_mapping.h"
 
 /******************************** Constants *******************************/
 
 /********************************* Methods ********************************/
-Config::Config() {
-    std::string filename = "config.json";
+
+/**
+ * @brief The constructor with parameters
+ * @param argc Number of arguments
+ * @param argv The command-line parameters
+ * @return An object containing all configuration parameters
+ */
+Config::Config(const int argc, const char** argv) {
+    /************ Init the parser ***********/
+    CmdParser parser(
+        "HPKNN is a Parallel and Distributed K-NN for Energyaware "
+        "Heterogeneous Platforms",
+        "mpirun [MPI OPTIONS] ./bin/hpknn [ARGS]", "Hpknn(c) 2015 EFFICOMP");
+    parser.addExample("./bin/hpknn -h");
+    parser.addExample("./bin/hpknn -conf \"config.json\"");
+
+    /************ Add arguments ***********/
+    parser.addArg("-h", false, "Display usage instructions.");
+    parser.addArg("-conf", true,
+                  "Name of the file containing the JSON configuration file.");
+
+    /************ Parse and check the missing arguments ***********/
+    check(!parser.parse(argv, argc), "%s\n", CFG_ERROR_PARSE_ARGUMENTS);
+
+    /************ Check important parameters ***********/
+    if (parser.isSet("-h")) {
+        parser.printHelp();
+        exit(EXIT_SUCCESS);
+    }
+
+    /************ Get the JSON/command-line parameters ***********/
+
+    std::string filename = parser.getValue<char*>("-conf");
 
     struct_mapping::reg(&Config::dbFilenameTest, "dbFilenameTest");
     struct_mapping::reg(&Config::dbFilenameTrain, "dbFilenameTrain");
@@ -45,8 +77,18 @@ Config::Config() {
     struct_mapping::map_json_to_struct(*this, buffer);
 }
 
+/**
+ * @brief Destroy the Config:: Config object
+ *
+ */
 Config::~Config() {}
 
+/**
+ * @brief Overload operator << to print in the standard output info about Config
+ * @param os stream output
+ * @param o object Config
+ * @return std::ostream& stream with info
+ */
 std::ostream& operator<<(std::ostream& os, const Config& o) {
     os << "dbFilenameTest: " << o.dbFilenameTest << std::endl;
     os << "dbFilenameTrain: " << o.dbFilenameTrain << std::endl;
@@ -54,4 +96,23 @@ std::ostream& operator<<(std::ostream& os, const Config& o) {
     os << "nFeatures: " << o.nFeatures << std::endl;
 
     return os;
+}
+
+/**
+ * @brief Check the condition. If it is true, a message is showed and the
+ * program will abort
+ * @param cond The condition to be evaluated
+ * @param format The format of the arguments
+ * @param ... The corresponding messages to be showed in error case
+ */
+void check(const bool cond, const char* const format, ...) {
+    // if (cond) {
+    //     va_list args;
+    //     va_start(args, format);
+    //     // fprintf(stderr, "Process %d: ", MPI::COMM_WORLD.Get_rank());
+    //     vfprintf(stderr, format, args);
+    //     va_end(args);
+    //     // MPI::COMM_WORLD.Abort(-1);
+    //     exit(EXIT_FAILURE);
+    // }
 }

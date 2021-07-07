@@ -27,11 +27,11 @@
 
 /********************************* Methods ********************************/
 
-BBDD::BBDD(const Config& config) {
+BBDD::BBDD(const char* filename, const Config& config) {
     std::ifstream db_file;
     std::string line;
 
-    db_file.open(config.dbFilenameTest);
+    db_file.open(filename);
 
     /********** Getting the database dimensions ***********/
 
