@@ -32,7 +32,8 @@
 Config::Config() {
     std::string filename = "config.json";
 
-    struct_mapping::reg(&Config::dbFilename, "dbFilename");
+    struct_mapping::reg(&Config::dbFilenameTest, "dbFilenameTest");
+    struct_mapping::reg(&Config::dbFilenameTrain, "dbFilenameTrain");
     struct_mapping::reg(&Config::K, "K");
     struct_mapping::reg(&Config::nFeatures, "nFeatures");
 
@@ -44,8 +45,11 @@ Config::Config() {
     struct_mapping::map_json_to_struct(*this, buffer);
 }
 
+Config::~Config() {}
+
 std::ostream& operator<<(std::ostream& os, const Config& o) {
-    os << "dbFilename: " << o.dbFilename << std::endl;
+    os << "dbFilenameTest: " << o.dbFilenameTest << std::endl;
+    os << "dbFilenameTrain: " << o.dbFilenameTrain << std::endl;
     os << "K: " << o.K << std::endl;
     os << "nFeatures: " << o.nFeatures << std::endl;
 

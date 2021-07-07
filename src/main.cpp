@@ -34,11 +34,11 @@
  * @param argv Arguments of the program
  */
 int main(const int argc, const char** argv) {
-    // BBDD db = BBDD();
-    // float* db_data = db.getDB();
+    const Config config;
 
-    Config config;
-    std::cout << config << std::endl;
+    BBDD db = BBDD(config);
+    float* db_data = db.getDB();
+    std::cout << db_data[0] << std::endl;
 
     return EXIT_SUCCESS;
 }

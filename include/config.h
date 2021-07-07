@@ -27,12 +27,14 @@
 
 /******************************** Structures ******************************/
 typedef struct Config {
-    std::string dbFilename;
+    std::string dbFilenameTest;
+    std::string dbFilenameTrain;
     int K;
     int nFeatures;
 
     /********************************* Methods ********************************/
     Config();
+    ~Config();
     friend std::ostream& operator<<(std::ostream& os, const Config& o);
 } Config;
 

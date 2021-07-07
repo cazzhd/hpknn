@@ -21,6 +21,8 @@
 
 /********************************* Includes *******************************/
 
+#include "config.h"
+
 /******************************** Constants *******************************/
 
 /********************************* Methods ********************************/
@@ -39,14 +41,12 @@ class BBDD {
 
    public:
     /********** Methods ***********/
-    BBDD();
+    BBDD(const Config& conf);
     ~BBDD();
     unsigned int getnRows();
     unsigned int getnCols();
     int getsizeBBDD();
     float* getDB();
 };
-
-float* getDBfunction();
 
 #endif
