@@ -20,9 +20,11 @@
 
 #include "config.h"
 
+#include <stdio.h>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <stdarg.h>
 
 #include "cmdParser.h"
 #include "struct_mapping/struct_mapping.h"
@@ -106,13 +108,13 @@ std::ostream& operator<<(std::ostream& os, const Config& o) {
  * @param ... The corresponding messages to be showed in error case
  */
 void check(const bool cond, const char* const format, ...) {
-    // if (cond) {
-    //     va_list args;
-    //     va_start(args, format);
-    //     // fprintf(stderr, "Process %d: ", MPI::COMM_WORLD.Get_rank());
-    //     vfprintf(stderr, format, args);
-    //     va_end(args);
-    //     // MPI::COMM_WORLD.Abort(-1);
-    //     exit(EXIT_FAILURE);
-    // }
+    if (cond) {
+        va_list args;
+        va_start(args, format);
+        // // fprintf(stderr, "Process %d: ", MPI::COMM_WORLD.Get_rank());
+        vfprintf(stderr, format, args);
+        va_end(args);
+        // MPI::COMM_WORLD.Abort(-1);
+        exit(EXIT_FAILURE);
+    }
 }

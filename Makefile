@@ -53,12 +53,13 @@ SOURCES		:= $(wildcard $(patsubst %,%/*.cpp, $(SOURCEDIRS)))
 OBJECTS		:= $(subst $(SRC), $(OBJ), $(SOURCES:.cpp=.o))
 OUTPUTMAIN	:= $(call FIXPATH,$(BIN)/$(MAIN))
 FOLDERS_CREATE = $(OBJ) $(BIN) $(DOC)
+CONF_FILE = config.json
 
 
 # ************ Targets ************
 
 all: $(FOLDERS_CREATE) $(OUTPUTMAIN)
-	@echo "\n\e[32mBinary $(OUTPUTMAIN) has been created!"
+	@echo -e "\n\e[32mBinary $(OUTPUTMAIN) has been created!"
 
 # ************ Folders to create ************
 
@@ -68,25 +69,25 @@ $(FOLDERS_CREATE):
 # ************ Compilation of modules ************
 
 $(OBJ)/%.o: $(SRC)/%.cpp
-	@echo "\e[33mCompiling module $< \e[0m"
+	@echo -e "\e[33mCompiling module $< \e[0m"
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $<  -o $@
 
 
 # ************ Linking and creating executable ************
 
 $(OUTPUTMAIN): $(OBJECTS)
-	@echo "\n\e[33mLinking and creating executable $@ \e[0m"
+	@echo -e "\n\e[33mLinking and creating executable $@ \e[0m"
 	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(LFLAGS)
 
 # ************ Documentation ************
 
 documentation:
-	@echo "\e[35mCreating documentation..."
+	@echo -e "\e[35mCreating documentation..."
 	@mkdir -p $(DOC)/html
 	@doxygen $(DOC)/Doxyfile
 	@printf "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\n" > $(DOC)/index.html
 	@printf "<html>\n <head>\n  <meta http-equiv=Refresh content=\"0;url=html/index.html\">\n </head>\n</html>" >> $(DOC)/index.html
-	@echo "\e[35mDocumentation created!"
+	@echo -e "\e[35mDocumentation created!"
 
 # ************ Cleaning ***************
 
@@ -94,17 +95,17 @@ documentation:
 clean:
 	-@$(RM) $(OUTPUTMAIN)
 	-@$(RMDIR) $(BIN)
-	@echo "\e[31mBianarians removed!"
+	@echo -e "\e[31mBianarians removed!"
 	-@$(RM) $(OBJ)/*
 	-@$(RMDIR) $(OBJ)
-	@echo "\e[31mObjects removed!"
+	@echo -e "\e[31mObjects removed!"
 	-@$(RMDIR) $(DOC)
-	@echo "\e[31mDocs removed!"
-	@echo "\e[31mCleanup complete!"
+	@echo -e "\e[31mDocs removed!"
+	@echo -e "\e[31mCleanup complete!"
 
 run: all
-	@echo "\e[0mExecuting $(OUTPUTMAIN)...\nOUTPUT:\n"
-	@./$(OUTPUTMAIN)
+	@echo -e "\e[0mExecuting $(OUTPUTMAIN)...\nOUTPUT:\n"
+	@./$(OUTPUTMAIN) -conf $(CONF_FILE)
 
 info:
-	@echo "\e[36mMade by Francisco Rodríguez Jiménez (cazz@correo.ugr.es)\nHpknn (c) 2015 EFFICOMP"
+	@echo -e "\e[36mMade by Francisco Rodríguez Jiménez (cazz@correo.ugr.es)\nHpknn (c) 2015 EFFICOMP"
