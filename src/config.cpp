@@ -23,6 +23,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <stdarg.h>
 
 #include "cmdParser.h"
 #include "struct_mapping/struct_mapping.h"

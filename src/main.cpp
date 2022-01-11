@@ -31,7 +31,8 @@
  * @param argc The number of arguments of the program
  * @param argv Arguments of the program
  */
-int main(const int argc, const char** argv) {
+int main(const int argc, const char **argv)
+{
     Config config(argc, argv);
     // std::cout << config << std::endl;
 
