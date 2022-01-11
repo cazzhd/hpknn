@@ -18,7 +18,6 @@
  */
 
 /********************************* Includes *******************************/
-
 #include <stdlib.h>
 
 #include <iostream>
@@ -27,7 +26,6 @@
 #include "db.h"
 
 /********************************* Main ********************************/
-
 /**
  * @brief Main program
  * @param argc The number of arguments of the program
@@ -35,19 +33,16 @@
  */
 int main(const int argc, const char** argv) {
     Config config(argc, argv);
+    // std::cout << config << std::endl;
 
     BBDD dbTrain = BBDD(config.dbFilenameTrain.c_str(), config);
     BBDD dbTest = BBDD(config.dbFilenameTest.c_str(), config);
 
     std::cout << "Info dbTrain" << std::endl;
-    std::cout << "Ncols: " << dbTrain.getnCols() << std::endl;
-    std::cout << "Nrows: " << dbTrain.getnRows() << std::endl;
-    std::cout << "Size: " << dbTrain.getsizeBBDD() << std::endl;
+    std::cout << dbTrain << std::endl;
 
-    std::cout << "\nInfo dbTest" << std::endl;
-    std::cout << "Ncols: " << dbTest.getnCols() << std::endl;
-    std::cout << "Nrows: " << dbTest.getnRows() << std::endl;
-    std::cout << "Size: " << dbTest.getsizeBBDD() << std::endl;
+    std::cout << "Info dbTest" << std::endl;
+    std::cout << dbTest << std::endl;
 
     return EXIT_SUCCESS;
 }

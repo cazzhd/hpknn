@@ -25,11 +25,31 @@
 
 /********************************* Methods ********************************/
 
-void KNN(unsigned int K, const float& dataTraining, const float& dataTest,
-         double (*distanceFunction)());
+/**
+ * @brief Using the KNN algorithm to find the nearest neighbors
+ * @param K The number of neighbors to find
+ * @param dataTraining The training data
+ * @param dataTest The test data
+ * @param distanceFunction The distance function to use
+ */
+void KNN(unsigned int K, const float& dataTraining, const float& dataTest, double (*distanceFunction)());
 
+/**
+ * @brief Get the Euclidean Distance object
+ * @return double with the Euclidean Distance
+ */
 double getEuclideanDistance();
+
+/**
+ * @brief Get the Manhattan object
+ * @return double with the Manhattan Distance
+ */
 double getManhattan();
+
+/**
+ * @brief Get the Minkowski object
+ * @return double with the Manhattan Distance
+ */
 double getMinkowski();
 
 #endif

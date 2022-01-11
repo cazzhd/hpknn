@@ -80,6 +80,7 @@ $(OUTPUTMAIN): $(OBJECTS)
 
 # ************ Documentation ************
 
+# 	Update Doxyfile with command doxygen -u
 documentation:
 	@echo "\e[35mCreating documentation..."
 	@mkdir -p $(DOC)/html
@@ -98,13 +99,15 @@ clean:
 	-@$(RM) $(OBJ)/*
 	-@$(RMDIR) $(OBJ)
 	@echo "\e[31mObjects removed!"
-	-@$(RMDIR) $(DOC)
+	-@$(RM) $(DOC)/html/*
+	-@$(RMDIR) $(DOC)/html
+	-@$(RM) $(DOC)/index.html
 	@echo "\e[31mDocs removed!"
 	@echo "\e[31mCleanup complete!"
 
 run: all
 	@echo "\e[0mExecuting $(OUTPUTMAIN)...\nOUTPUT:\n"
-	@./$(OUTPUTMAIN)
+	@./$(OUTPUTMAIN) -conf config.json
 
 info:
 	@echo "\e[36mMade by Francisco Rodríguez Jiménez (cazz@correo.ugr.es)\nHpknn (c) 2015 EFFICOMP"

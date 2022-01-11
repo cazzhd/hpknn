@@ -20,33 +20,69 @@
 #define BD_H
 
 /********************************* Includes *******************************/
-
 #include "config.h"
 
 /******************************** Constants *******************************/
+const char* const ERROR_DIMENSION_DB =
+    "Error: Number of columns of the database are irregular.";
 
 /********************************* Methods ********************************/
-
 /**
  * @brief Class of BBDD that permit read the EGG Database
  */
 class BBDD {
    private:
     /********** Attributes ***********/
-    unsigned int nRows;
-    unsigned int nCols;
-    int sizeBBDD;
-    float* db;
-    /********** Methods ***********/
+    unsigned int nRows; /**< Number of rows of the database */
+    unsigned int nCols; /**< Number of columns of the database */
+    int sizeBBDD;       /**< Size of the database */
+    float* db;          /**< Database */
 
    public:
     /********** Methods ***********/
-    BBDD(const char* filename, const Config& conf);
+    /**
+     * @brief Constructor of the class
+     * @param filename The name of the file to read
+     * @param config The configuration of the program
+    */
+    BBDD(const char* filename, const Config& config);
+
+    /**
+     * @brief Destructor of the class
+    */
     ~BBDD();
-    unsigned int getnRows();
-    unsigned int getnCols();
-    int getsizeBBDD();
+
+    /**
+     * @brief Get nRows of the database
+     * @return unsigned int with the number of rows
+    */
+    unsigned int getRows();
+
+    /**
+     * @brief Get nCols of the database
+     * @return unsigned int with the number of cols
+    */
+    unsigned int getCols();
+
+    /**
+     * @brief Get sizeBBDD of the database
+     * @return int with the size of the database
+    */
+    int getSizeBBDD();
+
+    /**
+     * @brief Get the database
+     * @return float* pointing to the database
+    */
     float* getDB();
+
+    /**
+     * @brief Overload operator << to print in the standard output info about BBDD
+     * @param os stream output
+     * @param o object BBDD
+     * @return std::ostream& stream with info
+    */
+    friend std::ostream& operator<<(std::ostream& os, const BBDD& o);
 };
 
 #endif

@@ -1,9 +1,0 @@
-{
-	"files.associations": {
-		"*.php": "php",
-		"*.txt": "plaintext",
-		"*.vue": "html",
-		"new": "cpp",
-		"ostream": "cpp"
-	}
-}

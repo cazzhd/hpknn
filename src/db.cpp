@@ -12,12 +12,11 @@
  * @file db.cpp
  * @author Francisco Rodríguez Jiménez
  * @date 29/06/2021
- * @brief Implementation of the db instance
+ * @brief Implementation of the BBDD class
  * @copyright Hpknn (c) 2015 EFFICOMP
  */
 
 /********************************* Includes *******************************/
-
 #include "db.h"
 
 #include <fstream>
@@ -25,8 +24,11 @@
 #include <sstream>
 #include <string>
 
-/********************************* Methods ********************************/
+#include "config.h"
 
+/******************************** Constants *******************************/
+
+/********************************* Methods ********************************/
 BBDD::BBDD(const char* filename, const Config& config) {
     std::ifstream db_file;
     std::string line;
@@ -34,7 +36,6 @@ BBDD::BBDD(const char* filename, const Config& config) {
     db_file.open(filename);
 
     /********** Getting the database dimensions ***********/
-
     if (db_file.is_open()) {
         float dato;
         unsigned int n_cols = 0, n_rows = 1;
@@ -53,7 +54,7 @@ BBDD::BBDD(const char* filename, const Config& config) {
                 ++tmp_ncols;
             }
 
-            if (tmp_ncols != n_cols) exit(EXIT_FAILURE);
+            check(tmp_ncols != n_cols, "%s\n", ERROR_DIMENSION_DB);
         }
 
         int db_size = n_rows * n_cols;
@@ -71,16 +72,24 @@ BBDD::BBDD(const char* filename, const Config& config) {
         this->sizeBBDD = db_size;
         this->db = data_db;
     } else {
-        std::cout << "No esta abierto" << std::endl;
+        std::cout << "The file isn't open" << std::endl;
     }
 }
 
 BBDD::~BBDD() { delete[] this->db; }
 
-unsigned int BBDD::getnRows() { return this->nRows; }
+unsigned int BBDD::getRows() { return this->nRows; }
 
-unsigned int BBDD::getnCols() { return this->nCols; }
+unsigned int BBDD::getCols() { return this->nCols; }
 
-int BBDD::getsizeBBDD() { return this->sizeBBDD; }
+int BBDD::getSizeBBDD() { return this->sizeBBDD; }
 
 float* BBDD::getDB() { return this->db; }
+
+std::ostream& operator<<(std::ostream& os, const BBDD& o) {
+    os << "Ncols: " << o.nCols << std::endl;
+    os << "Nrows: " << o.nRows << std::endl;
+    os << "Size: " << o.sizeBBDD << std::endl;
+
+    return os;
+}

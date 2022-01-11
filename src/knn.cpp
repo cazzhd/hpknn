@@ -17,15 +17,14 @@
  */
 
 /********************************* Includes *******************************/
-
 #include "knn.h"
 
 /******************************** Constants *******************************/
 
 /********************************* Methods ********************************/
 
-void KNN(unsigned int K, const float& dataTraining, const float& dataTest,
-         double (*distanceFunction)()) {}
+void KNN(unsigned int K, const float& dataTraining, const float& dataTest, double (*distanceFunction)()) {
+}
 
 double getEuclideanDistance() {}
 

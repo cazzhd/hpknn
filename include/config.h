@@ -20,27 +20,54 @@
 #define CONFIG_H
 
 /********************************* Includes *******************************/
-
 #include <fstream>
 
 /******************************** Constants *******************************/
-
-const char* const CFG_ERROR_PARSE_ARGUMENTS =
-    "Error: Missing required value of the argument or nothing to parse";
+const char* const ERROR_PARSE_ARGUMENTS =
+    "Error: Missing required value of the argument or nothing to parse, please use -h for more information.";
 
 /******************************** Structures ******************************/
+
+/**
+ * @brief Struct of Config that permit set the configuration of the program from json file
+ */
 typedef struct Config {
-    std::string dbFilenameTest;
-    std::string dbFilenameTrain;
-    int K;
-    int nFeatures;
+    std::string dbFilenameTest;  /**< Filename of the database to test */
+    std::string dbFilenameTrain; /**< Filename of the database to train */
+    int K;                       /**< Number of neighbors to search */
+    int nFeatures;               /**< Number of features of the database */
 
     /********************************* Methods ********************************/
+    /**
+      * @brief The constructor with parameters
+      * @param argc Number of arguments
+      * @param argv The command-line parameters
+      * @return An object containing all configuration parameters
+    */
     Config(const int argc, const char** argv);
+
+    /**
+     * @brief Destroy the Config:: Config object
+     *
+    */
     ~Config();
+
+    /**
+     * @brief Overload operator << to print in the standard output info about Config
+     * @param os stream output
+     * @param o object Config
+     * @return std::ostream& stream with info
+    */
     friend std::ostream& operator<<(std::ostream& os, const Config& o);
 } Config;
 
+/**
+ * @brief Check the condition. If it is true, a message is showed and the
+ * program will abort
+ * @param cond The condition to be evaluated
+ * @param format The format of the arguments
+ * @param ... The corresponding messages to be showed in error case
+*/
 void check(const bool cond, const char* const format, ...);
 
 #endif
