@@ -25,6 +25,7 @@
 /******************************** Constants *******************************/
 const char* const ERROR_DIMENSION_DB =
     "Error: Number of columns of the database are irregular.";
+const char* const ERROR_OPEN_DB = "Error: Cannot open database file.";
 
 /********************************* Methods ********************************/
 /**

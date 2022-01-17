@@ -72,7 +72,7 @@ BBDD::BBDD(const char* filename, const Config& config) {
         this->sizeBBDD = db_size;
         this->db = data_db;
     } else {
-        std::cout << "The file isn't open" << std::endl;
+        check(true, "%s\n", ERROR_OPEN_DB);
     }
 }
 
