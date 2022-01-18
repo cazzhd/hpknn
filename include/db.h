@@ -44,37 +44,36 @@ class BBDD {
     /**
      * @brief Constructor of the class
      * @param filename The name of the file to read
-     * @param config The configuration of the program
-    */
-    BBDD(const char* filename, const Config& config);
+     */
+    BBDD(const char* filename);
 
     /**
      * @brief Destructor of the class
-    */
+     */
     ~BBDD();
 
     /**
      * @brief Get nRows of the database
      * @return unsigned int with the number of rows
-    */
+     */
     unsigned int getRows();
 
     /**
      * @brief Get nCols of the database
      * @return unsigned int with the number of cols
-    */
+     */
     unsigned int getCols();
 
     /**
      * @brief Get sizeBBDD of the database
      * @return int with the size of the database
-    */
+     */
     int getSizeBBDD();
 
     /**
      * @brief Get the database
      * @return float* pointing to the database
-    */
+     */
     float* getDB();
 
     /**
@@ -82,8 +81,31 @@ class BBDD {
      * @param os stream output
      * @param o object BBDD
      * @return std::ostream& stream with info
-    */
+     */
     friend std::ostream& operator<<(std::ostream& os, const BBDD& o);
+};
+
+/**
+ * @brief Class of CSVReader that permit read the EGG Database with format CSV
+ */
+class CSVReader {
+   private:
+    char delimiter; /**< Delimiter of the CSV file */
+
+   public:
+    /********** Methods ***********/
+    /**
+     * @brief Constructor of the class
+     * @param filename The name of the file to read
+     * @param delimiter The delimiter of the CSV file, default ','
+     */
+    CSVReader(const char delimiter = ',');
+
+    /**
+     * @brief Get the Data from the CSV file in a float*
+     * @param filename The name of the file to read
+     */
+    float* getData(const char* filename);
 };
 
 #endif

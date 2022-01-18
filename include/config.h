@@ -32,24 +32,28 @@ const char* const ERROR_PARSE_ARGUMENTS =
  * @brief Struct of Config that permit set the configuration of the program from json file
  */
 typedef struct Config {
-    std::string dbFilenameTest;  /**< Filename of the database to test */
-    std::string dbFilenameTrain; /**< Filename of the database to train */
-    int K;                       /**< Number of neighbors to search */
-    int nFeatures;               /**< Number of features of the database */
+    std::string dbDataTest;       /**< Filename of the dataset to test */
+    std::string dbLabelsTest;     /**< Filename of the dataset labels to test */
+    std::string dbDataTraining;   /**< Filename of the dataset to train */
+    std::string dbLabelsTraining; /**< Filename of the dataset labels to train */
+    int nTuples;                  /**< Number of tuples of the dataset */
+    int nFeatures;                /**< Number of features of the dataset */
+    int nClasses;                 /**< Number of classes of the dataset */
+    int K;                        /**< Number of neighbors to search */
 
     /********************************* Methods ********************************/
     /**
-      * @brief The constructor with parameters
-      * @param argc Number of arguments
-      * @param argv The command-line parameters
-      * @return An object containing all configuration parameters
-    */
+     * @brief The constructor with parameters
+     * @param argc Number of arguments
+     * @param argv The command-line parameters
+     * @return An object containing all configuration parameters
+     */
     Config(const int argc, const char** argv);
 
     /**
      * @brief Destroy the Config:: Config object
      *
-    */
+     */
     ~Config();
 
     /**
@@ -57,7 +61,7 @@ typedef struct Config {
      * @param os stream output
      * @param o object Config
      * @return std::ostream& stream with info
-    */
+     */
     friend std::ostream& operator<<(std::ostream& os, const Config& o);
 } Config;
 
@@ -67,7 +71,7 @@ typedef struct Config {
  * @param cond The condition to be evaluated
  * @param format The format of the arguments
  * @param ... The corresponding messages to be showed in error case
-*/
+ */
 void check(const bool cond, const char* const format, ...);
 
 #endif

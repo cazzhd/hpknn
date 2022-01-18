@@ -19,11 +19,12 @@
 /********************************* Includes *******************************/
 #include "config.h"
 
+#include <stdarg.h>
+
 #include <cstdarg>
 #include <fstream>
 #include <iostream>
 #include <sstream>
-#include <stdarg.h>
 
 #include "cmdParser.h"
 #include "struct_mapping/struct_mapping.h"
@@ -56,10 +57,14 @@ Config::Config(const int argc, const char** argv) {
     /************ Get the JSON/command-line parameters ***********/
     std::string filename = parser.getValue<char*>("-conf");
 
-    struct_mapping::reg(&Config::dbFilenameTest, "dbFilenameTest");
-    struct_mapping::reg(&Config::dbFilenameTrain, "dbFilenameTrain");
-    struct_mapping::reg(&Config::K, "K");
+    struct_mapping::reg(&Config::dbDataTest, "dbDataTest");
+    struct_mapping::reg(&Config::dbLabelsTest, "dbLabelsTest");
+    struct_mapping::reg(&Config::dbDataTraining, "dbDataTraining");
+    struct_mapping::reg(&Config::dbLabelsTraining, "dbLabelsTraining");
+    struct_mapping::reg(&Config::nTuples, "nTuples");
     struct_mapping::reg(&Config::nFeatures, "nFeatures");
+    struct_mapping::reg(&Config::nClasses, "nClasses");
+    struct_mapping::reg(&Config::K, "K");
 
     std::ifstream fileConfig(filename.c_str());
     std::stringstream buffer;
@@ -72,10 +77,14 @@ Config::Config(const int argc, const char** argv) {
 Config::~Config() {}
 
 std::ostream& operator<<(std::ostream& os, const Config& o) {
-    os << "dbFilenameTest: " << o.dbFilenameTest << std::endl;
-    os << "dbFilenameTrain: " << o.dbFilenameTrain << std::endl;
-    os << "K: " << o.K << std::endl;
+    os << "dbDataTest: " << o.dbDataTest << std::endl;
+    os << "dbLabelsTest: " << o.dbLabelsTest << std::endl;
+    os << "dbDataTraining: " << o.dbDataTraining << std::endl;
+    os << "dbLabelsTraining: " << o.dbLabelsTraining << std::endl;
+    os << "nTuples: " << o.nTuples << std::endl;
     os << "nFeatures: " << o.nFeatures << std::endl;
+    os << "nClasses: " << o.nClasses << std::endl;
+    os << "K: " << o.K << std::endl;
 
     return os;
 }

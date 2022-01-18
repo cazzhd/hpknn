@@ -1,6 +1,10 @@
 {
-    "dbFilenameTest": "db/data_essex_3600_x110_plus_class.txt",
-    "dbFilenameTrain": "db/data_essex_3600_xe110_plus_class.txt",
-    "K": 7,
-    "nFeatures": 3600
+    "dbDataTest": "db/essex104_csv/data_test_104.csv",
+    "dbLabelsTest": "db/essex104_csv/labels_test_104.csv",
+    "dbDataTraining": "db/essex104_csv/data_training_104.csv",
+    "dbLabelsTraining": "db/essex104_csv/labels_training_104.csv",
+    "nTuples": 178,
+    "nFeatures": 3600,
+    "nClasses": 3,
+    "K": 11
 }

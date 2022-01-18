@@ -19,6 +19,7 @@
 /********************************* Includes *******************************/
 #include "db.h"
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -29,48 +30,48 @@
 /******************************** Constants *******************************/
 
 /********************************* Methods ********************************/
-BBDD::BBDD(const char* filename, const Config& config) {
-    std::ifstream db_file;
+BBDD::BBDD(const char* filename) {
+    std::ifstream dbFile;
     std::string line;
 
-    db_file.open(filename);
+    dbFile.open(filename);
 
     /********** Getting the database dimensions ***********/
-    if (db_file.is_open()) {
-        float dato;
-        unsigned int n_cols = 0, n_rows = 1;
+    if (dbFile.is_open()) {
+        float data;
+        unsigned int nCols = 0, nRows = 1;
 
-        getline(db_file, line);
+        getline(dbFile, line);
         std::stringstream ss(line);
-        while (ss >> dato) {
-            ++n_cols;
+        while (ss >> data) {
+            ++nCols;
         }
 
-        while (getline(db_file, line)) {
-            ++n_rows;
+        while (getline(dbFile, line)) {
+            ++nRows;
             std::stringstream ss(line);
-            unsigned tmp_ncols = 0;
-            while (ss >> dato) {
-                ++tmp_ncols;
+            unsigned tmpNcols = 0;
+            while (ss >> data) {
+                ++tmpNcols;
             }
 
-            check(tmp_ncols != n_cols, "%s\n", ERROR_DIMENSION_DB);
+            check(tmpNcols != nCols, "%s\n", ERROR_DIMENSION_DB);
         }
 
-        int db_size = n_rows * n_cols;
-        float* data_db = new float[db_size];
-        db_file.clear();
-        db_file.seekg(0);
-        for (int i = 0; i < db_size; ++i) {
-            db_file >> data_db[i];
+        int dbSize = nRows * nCols;
+        float* dataDb = new float[dbSize];
+        dbFile.clear();
+        dbFile.seekg(0);
+        for (int i = 0; i < dbSize; ++i) {
+            dbFile >> dataDb[i];
         }
 
-        db_file.close();
+        dbFile.close();
 
-        this->nRows = n_rows;
-        this->nCols = n_cols;
-        this->sizeBBDD = db_size;
-        this->db = data_db;
+        this->nRows = nRows;
+        this->nCols = nCols;
+        this->sizeBBDD = dbSize;
+        this->db = dataDb;
     } else {
         check(true, "%s\n", ERROR_OPEN_DB);
     }
@@ -92,4 +93,58 @@ std::ostream& operator<<(std::ostream& os, const BBDD& o) {
     os << "Size: " << o.sizeBBDD << std::endl;
 
     return os;
+}
+
+CSVReader::CSVReader(const char delimiter) : delimiter(delimiter) {}
+
+float* CSVReader::getData(const char* filename) {
+    std::ifstream dbFile;
+    std::string line;
+
+    dbFile.open(filename);
+
+    /********** Getting the database dimensions ***********/
+    if (dbFile.is_open()) {
+        float data;
+        unsigned int nCols = 0, nRows = 1;
+
+        getline(dbFile, line);
+        std::replace(line.begin(), line.end(), ',', ' ');
+        std::stringstream ss(line);
+        while (ss >> data) {
+            ++nCols;
+        }
+
+        while (getline(dbFile, line)) {
+            ++nRows;
+            std::replace(line.begin(), line.end(), ',', ' ');
+            std::stringstream ss(line);
+            unsigned tmpNcols = 0;
+            while (ss >> data) {
+                ++tmpNcols;
+            }
+
+            check(tmpNcols != nCols, "%s\n", ERROR_DIMENSION_DB);
+        }
+
+        int dbSize = nRows * nCols;
+        float* dataDb = new float[dbSize];
+        dbFile.clear();
+        dbFile.seekg(0);
+
+        unsigned int i = 0;
+        while (getline(dbFile, line)) {
+            std::replace(line.begin(), line.end(), ',', ' ');
+            std::stringstream ss(line);
+            unsigned tmpNcols = 0;
+            while (ss >> dataDb[i]) {
+                ++i;
+            }
+        }
+
+        dbFile.close();
+        return dataDb;
+    } else {
+        check(true, "%s\n", ERROR_OPEN_DB);
+    }
 }

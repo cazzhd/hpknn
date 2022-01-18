@@ -31,19 +31,24 @@
  * @param argc The number of arguments of the program
  * @param argv Arguments of the program
  */
-int main(const int argc, const char **argv)
-{
+int main(const int argc, const char** argv) {
     Config config(argc, argv);
     // std::cout << config << std::endl;
 
-    BBDD dbTrain = BBDD(config.dbFilenameTrain.c_str(), config);
-    BBDD dbTest = BBDD(config.dbFilenameTest.c_str(), config);
+    CSVReader csvReader = CSVReader();
+    float* dataTraining = csvReader.getData(config.dbDataTraining.c_str());
+    float* dataTesting = csvReader.getData(config.dbLabelsTest.c_str());
 
-    std::cout << "Info dbTrain" << std::endl;
-    std::cout << dbTrain << std::endl;
+    // BBDD dbTraining = BBDD(config.dbDataTraining.c_str());
+    // BBDD dbTest = BBDD(config.dbDataTest.c_str());
 
-    std::cout << "Info dbTest" << std::endl;
-    std::cout << dbTest << std::endl;
+    // std::cout << "Info dbTrain" << std::endl;
+    // std::cout << dbTrain << std::endl;
+
+    // std::cout << "Info dbTest" << std::endl;
+    // std::cout << dbTest << std::endl;
+
+    delete[] dataTraining, dataTesting;
 
     return EXIT_SUCCESS;
 }
