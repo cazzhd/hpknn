@@ -20,11 +20,13 @@
 #define KNN_H
 
 /********************************* Includes *******************************/
+#include <fstream>
+
+#include "config.h"
 
 /******************************** Constants *******************************/
 
 /********************************* Methods ********************************/
-
 /**
  * @brief Using the KNN algorithm to find the nearest neighbors
  * @param K The number of neighbors to find
@@ -32,24 +34,26 @@
  * @param dataTest The test data
  * @param distanceFunction The distance function to use
  */
-void KNN(unsigned int K, const float& dataTraining, const float& dataTest, double (*distanceFunction)());
+void KNN(const float& dataTraining, const float& dataTest, float (*distanceFunction)(const float&, const float&, const Config&), const Config& config);
 
 /**
  * @brief Get the Euclidean Distance object
- * @return double with the Euclidean Distance
+ * @param tupleTraining The training data
+ * @param tupleTest The test data
+ * @return float with the Euclidean Distance
  */
-double getEuclideanDistance();
+float euclideanDistance(const float& tupleTraining, const float& tupleTest, const Config& config);
 
 /**
  * @brief Get the Manhattan object
- * @return double with the Manhattan Distance
+ * @return float with the Manhattan Distance
  */
-double getManhattan();
+float manhattanDistance();
 
 /**
  * @brief Get the Minkowski object
- * @return double with the Manhattan Distance
+ * @return float with the Manhattan Distance
  */
-double getMinkowski();
+float minkowskiDistance();
 
 #endif

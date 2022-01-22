@@ -22,7 +22,6 @@
 #include <stdarg.h>
 
 #include <cstdarg>
-#include <fstream>
 #include <iostream>
 #include <sstream>
 
@@ -64,7 +63,6 @@ Config::Config(const int argc, const char** argv) {
     struct_mapping::reg(&Config::nTuples, "nTuples");
     struct_mapping::reg(&Config::nFeatures, "nFeatures");
     struct_mapping::reg(&Config::nClasses, "nClasses");
-    struct_mapping::reg(&Config::K, "K");
 
     std::ifstream fileConfig(filename.c_str());
     std::stringstream buffer;
@@ -84,7 +82,6 @@ std::ostream& operator<<(std::ostream& os, const Config& o) {
     os << "nTuples: " << o.nTuples << std::endl;
     os << "nFeatures: " << o.nFeatures << std::endl;
     os << "nClasses: " << o.nClasses << std::endl;
-    os << "K: " << o.K << std::endl;
 
     return os;
 }

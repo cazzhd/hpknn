@@ -39,7 +39,6 @@ typedef struct Config {
     int nTuples;                  /**< Number of tuples of the dataset */
     int nFeatures;                /**< Number of features of the dataset */
     int nClasses;                 /**< Number of classes of the dataset */
-    int K;                        /**< Number of neighbors to search */
 
     /********************************* Methods ********************************/
     /**
