@@ -36,19 +36,16 @@ int main(const int argc, const char** argv) {
     // std::cout << config << std::endl;
 
     CSVReader csvReader = CSVReader();
+    float* dataTest = csvReader.getData(config.dbDataTest.c_str());
+    float* labelsTest = csvReader.getData(config.dbLabelsTest.c_str());
+
     float* dataTraining = csvReader.getData(config.dbDataTraining.c_str());
-    float* dataTesting = csvReader.getData(config.dbLabelsTest.c_str());
+    float* labelTraining = csvReader.getData(config.dbLabelsTraining.c_str());
 
-    // BBDD dbTraining = BBDD(config.dbDataTraining.c_str());
-    // BBDD dbTest = BBDD(config.dbDataTest.c_str());
-
-    // std::cout << "Info dbTrain" << std::endl;
-    // std::cout << dbTrain << std::endl;
-
-    // std::cout << "Info dbTest" << std::endl;
-    // std::cout << dbTest << std::endl;
-
-    delete[] dataTraining, dataTesting;
+    delete[] dataTest;
+    delete[] labelsTest;
+    delete[] dataTraining;
+    delete[] labelTraining;
 
     return EXIT_SUCCESS;
 }

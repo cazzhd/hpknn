@@ -98,6 +98,7 @@ std::ostream& operator<<(std::ostream& os, const BBDD& o) {
 CSVReader::CSVReader(const char delimiter) : delimiter(delimiter) {}
 
 float* CSVReader::getData(const char* filename) {
+    float* dataDb;
     std::ifstream dbFile;
     std::string line;
 
@@ -128,7 +129,7 @@ float* CSVReader::getData(const char* filename) {
         }
 
         int dbSize = nRows * nCols;
-        float* dataDb = new float[dbSize];
+        dataDb = new float[dbSize];
         dbFile.clear();
         dbFile.seekg(0);
 
@@ -136,15 +137,14 @@ float* CSVReader::getData(const char* filename) {
         while (getline(dbFile, line)) {
             std::replace(line.begin(), line.end(), ',', ' ');
             std::stringstream ss(line);
-            unsigned tmpNcols = 0;
             while (ss >> dataDb[i]) {
                 ++i;
             }
         }
 
         dbFile.close();
-        return dataDb;
     } else {
         check(true, "%s\n", ERROR_OPEN_DB);
     }
+    return dataDb;
 }
