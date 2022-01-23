@@ -27,61 +27,62 @@
 /******************************** Constants *******************************/
 
 /********************************* Methods ********************************/
-Point::Point() : data(nullptr), distance(0), label(-1) {}
+Point::Point() : distance(0), label(-1) {}
 
-Point::Point(float& data, float distance, unsigned int label, const Config& config) {
-    float* data_ = new float[config.nFeatures];
-
-    // Copy data
-    for (unsigned int i = 0; i < config.nFeatures; ++i) {
-        data_[i] = (data + i);
-    }
-
-    this->data = data_;
-    this->distance = distance;
+Point::Point(std::vector<float> data, unsigned int label) {
+    this->data = data;
+    this->distance = 0;
     this->label = label;
 }
 
-Point::~Point() {
-    if (this->data != nullptr) {
-        delete[] this->data;
-    }
-}
+Point::~Point() {}
 
 std::ostream& operator<<(std::ostream& os, const Point& o) {
-    os << "dataPointer: " << *o.data << std::endl;
+    os << "data: " << o.data[0] << std::endl;
     os << "distance: " << o.distance << std::endl;
     os << "label: " << o.label << std::endl;
 
     return os;
 }
 
-void KNN(int k, const Point& dataTraining, const Point& dataTest, float (*distanceFunction)(const float&, const float&, const Config&), const Config& config) {
-    float* actualTupleTest = new float[config.nFeatures];
-    float* actualTupleTraining = new float[config.nFeatures];
-
-    for (int i = 0; i < config.nTuples; ++i) {
-        memcpy(actualTupleTest, &dataTest + i * config.nFeatures, config.nFeatures * sizeof(float));
-        float* vectorDistances = new float[config.nTuples];
-        for (int j = 0; j < config.nTuples; ++j) {
-            memcpy(actualTupleTraining, &dataTraining + j * config.nFeatures, config.nFeatures * sizeof(float));
-            std::cout << actualTupleTraining << std::endl;
-            float distance = distanceFunction(*actualTupleTraining, *actualTupleTest, config);
-            vectorDistances[j] = distance;
-        }
-        std::sort(vectorDistances, vectorDistances + config.nTuples);
-        delete[] vectorDistances;
+void KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&)) {
+    for (size_t i = 0; i < dataTraining.size(); ++i) {
+        dataTraining[i].distance = distanceFunction(dataTraining[i], dataTest);
     }
 
-    delete[] actualTupleTest;
-    delete[] actualTupleTraining;
+    sort(dataTraining.begin(), dataTraining.end(), [](Point& a, Point& b) {
+        return a.distance < b.distance;
+    });
+
+    // for (unsigned short i = 0; i < k; ++i) {
+    //     std::cout << dataTraining[i] << std::endl;
+    // }
+
+    // float* actualTupleTest = new float[config.nFeatures];
+    // float* actualTupleTraining = new float[config.nFeatures];
+
+    // for (int i = 0; i < config.nTuples; ++i) {
+    //     memcpy(actualTupleTest, &dataTest + i * config.nFeatures, config.nFeatures * sizeof(float));
+    //     float* vectorDistances = new float[config.nTuples];
+    //     for (int j = 0; j < config.nTuples; ++j) {
+    //         memcpy(actualTupleTraining, &dataTraining + j * config.nFeatures, config.nFeatures * sizeof(float));
+    //         std::cout << actualTupleTraining << std::endl;
+    //         float distance = distanceFunction(*actualTupleTraining, *actualTupleTest, config);
+    //         vectorDistances[j] = distance;
+    //     }
+    //     std::sort(vectorDistances, vectorDistances + config.nTuples);
+    //     delete[] vectorDistances;
+    // }
+
+    // delete[] actualTupleTest;
+    // delete[] actualTupleTraining;
 }
 
-float euclideanDistance(const float& tupleTraining, const float& tupleTest, const Config& config) {
+float euclideanDistance(Point& pointTraining, Point& pointTest) {
     float distance = 0;
 
-    for (int i = 0; i < config.nFeatures; ++i) {
-        distance += pow((tupleTraining + i) - (tupleTest + i), 2);
+    for (int i = 0; i < pointTraining.data.size(); ++i) {
+        distance += pow((pointTraining.data[i]) - (pointTest.data[i]), 2);
     }
 
     return sqrt(distance);

@@ -190,6 +190,7 @@ std::vector<std::vector<float>> CSVReader::readData(std::string filename) {
                 tupleData.push_back(data);
             }
             dataDb.push_back(tupleData);
+            tupleData.clear();
         }
 
         dbFile.close();
