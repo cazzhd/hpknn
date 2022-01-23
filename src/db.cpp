@@ -97,7 +97,7 @@ std::ostream& operator<<(std::ostream& os, const BBDD& o) {
 
 CSVReader::CSVReader(const char delimiter) : delimiter(delimiter) {}
 
-float* CSVReader::getData(const char* filename) {
+float* CSVReader::readData(const char* filename) {
     float* dataDb;
     std::ifstream dbFile;
     std::string line;
@@ -146,5 +146,56 @@ float* CSVReader::getData(const char* filename) {
     } else {
         check(true, "%s\n", ERROR_OPEN_DB);
     }
+    return dataDb;
+}
+
+std::vector<std::vector<float>> CSVReader::readData(std::string filename) {
+    std::vector<std::vector<float>> dataDb;
+    std::ifstream dbFile;
+    std::string line;
+
+    dbFile.open(filename);
+
+    /********** Getting the database dimensions ***********/
+    if (dbFile.is_open()) {
+        float data;
+        unsigned int nCols = 0, nRows = 1;
+
+        getline(dbFile, line);
+        std::replace(line.begin(), line.end(), ',', ' ');
+        std::stringstream ss(line);
+        while (ss >> data) {
+            ++nCols;
+        }
+
+        while (getline(dbFile, line)) {
+            ++nRows;
+            std::replace(line.begin(), line.end(), ',', ' ');
+            std::stringstream ss(line);
+            unsigned tmpNcols = 0;
+            while (ss >> data) {
+                ++tmpNcols;
+            }
+
+            check(tmpNcols != nCols, "%s\n", ERROR_DIMENSION_DB);
+        }
+
+        dbFile.clear();
+        dbFile.seekg(0);
+        std::vector<float> tupleData;
+        while (getline(dbFile, line)) {
+            std::replace(line.begin(), line.end(), ',', ' ');
+            std::stringstream ss(line);
+            while (ss >> data) {
+                tupleData.push_back(data);
+            }
+            dataDb.push_back(tupleData);
+        }
+
+        dbFile.close();
+    } else {
+        check(true, "%s\n", ERROR_OPEN_DB);
+    }
+
     return dataDb;
 }

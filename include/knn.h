@@ -27,6 +27,39 @@
 /******************************** Constants *******************************/
 
 /********************************* Methods ********************************/
+struct Point {
+    float* data;         //!< Pointer to the data of the point
+    float distance;      //!< Distance to the point
+    unsigned int label;  //!< Label of the point
+
+    /**
+	 * @brief Default Construct a new Point object
+	 */
+    Point();
+
+    /**
+	 * @brief Construct a new Point object
+	 * @param data Pointer to the data of the point
+	 * @param distance Distance to the point
+	 * @param label Label of the point
+	 * @param config Configuration of the problem
+	 */
+    Point(float& data, float distance, unsigned int label, const Config& config);
+
+    /**
+	 * @brief Destroy the Point object
+	 */
+    ~Point();
+
+    /**
+     * @brief Overload operator << to print in the standard output info about Point
+     * @param os stream output
+     * @param o object Point
+     * @return std::ostream& stream with info
+     */
+    friend std::ostream& operator<<(std::ostream& os, const Point& o);
+};
+
 /**
  * @brief Using the KNN algorithm to find the nearest neighbors
  * @param K The number of neighbors to find
@@ -34,7 +67,7 @@
  * @param dataTest The test data
  * @param distanceFunction The distance function to use
  */
-void KNN(const float& dataTraining, const float& dataTest, float (*distanceFunction)(const float&, const float&, const Config&), const Config& config);
+void KNN(int k, const Point& dataTraining, const Point& dataTest, float (*distanceFunction)(const float&, const float&, const Config&), const Config& config);
 
 /**
  * @brief Get the Euclidean Distance object

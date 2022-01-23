@@ -14,12 +14,14 @@
  * @date 26/06/2021
  * @brief a Parallel and Distributed K-NN for Energyaware Heterogeneous
  * Platforms
- * @copyright Hpknn (c) 2015 EFFICOMP
+ * @copyr#include <chrono>
+ight Hpknn (c) 2015 EFFICOMP
  */
 
 /********************************* Includes *******************************/
 #include <stdlib.h>
 
+#include <chrono>
 #include <cstring>
 #include <iostream>
 #include <vector>
@@ -35,58 +37,44 @@
  * @param argv Arguments of the program
  */
 int main(const int argc, const char** argv) {
-    // std::vector<double> v;
-
-    // v.push_back(1.0);
-    // v.push_back(2.0);
-    // v.push_back(3.0);
-    // v.push_back(4.0);
-    // v.push_back(5.0);
-
-    // // Print the vector
-    // for (auto& i : v) {
-    //     std::cout << i << std::endl;
-    // }
-
-    // double* a = &v[0];
-
-    // // Print the vector
-    // for (int i = 0; i < 5; i++) {
-    //     std::cout << a[i] << std::endl;
-    // }
-
-    // int arr[] = {1, 2, 3, 4, 5};
-    // int* cp = new int[3];
-    // memcpy(cp, arr + 1, sizeof(int) * 3);
-
-    // for (int i = 0; i < 3; i++) {
-    //     std::cout << cp[i] << std::endl;
-    // }
-
     Config config(argc, argv);
-
     // std::cout << config << std::endl;
 
     CSVReader csvReader = CSVReader();
-    float* dataTest = csvReader.getData(config.dbDataTest.c_str());
-    float* labelsTest = csvReader.getData(config.dbLabelsTest.c_str());
+    std::vector<std::vector<float>> dataTest = csvReader.readData(config.dbDataTraining);
+    std::vector<std::vector<float>> labelsTest = csvReader.readData(config.dbLabelsTraining);
+    std::vector<std::vector<float>> dataTraining = csvReader.readData(config.dbDataTraining);
+    std::vector<std::vector<float>> labelTraining = csvReader.readData(config.dbLabelsTraining);
 
-    float* dataTraining = csvReader.getData(config.dbDataTraining.c_str());
-    float* labelTraining = csvReader.getData(config.dbLabelsTraining.c_str());
+    std::vector<Point> dataTrainingPoints;
+    for(unsigned int i = 0; i < dataTraining.size(); ++i) {
+        Point point(dataTraining[i], 0, labelTraining[i][0], config);
+        dataTrainingPoints.push_back(point);
+    }
 
-    KNN(*dataTraining, *dataTest, euclideanDistance, config);
+    // float* dataTest = csvReader.readData(config.dbDataTest.c_str());
+    // float* labelsTest = csvReader.readData(config.dbLabelsTest.c_str());
+    // float* dataTraining = csvReader.readData(config.dbDataTraining.c_str());
+    // float* labelTraining = csvReader.readData(config.dbLabelsTraining.c_str());
 
-    // for (int i = 0; i < config.nTuples; i++) {
-    //     int n;
-    //     float* aux = new float[config.nFeatures];
-    //     memcpy(aux, dataTest + i * config.nFeatures, sizeof(float) * config.nFeatures);
-
-    //     std::cout << *(dataTest + config.nFeatures - 1) << std::endl;
-    //     std::cout << *(aux + config.nFeatures - 1) << std::endl;
-
-    //     std::cin >> n;
+    // Process dataTraining to create Point objects
+    // Point* pointsTraining = new Point[config.nTuples];
+    // float* tmpTupleTraining;
+    // for (int i = 0; i < config.nTuples; ++i) {
+    //     tmpTupleTraining = new float[config.nFeatures];
+    //     memcpy(tmpTupleTraining, dataTraining + i * config.nFeatures, config.nFeatures * sizeof(float));
+    //     pointsTraining[i] = Point(*tmpTupleTraining, 0, labelTraining[i], config);
     // }
+    // delete[] tmpTupleTraining;
 
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    // KNN(11, *dataTraining, *dataTest, euclideanDistance, config);
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
+    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
+    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
+    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count() << "[ns]" << std::endl;
     // Point* points = new Point[config.nTuples];
     // for (int i = 0; i < config.nTuples; i++) {
     //     points[i] = Point(i, i);
@@ -95,10 +83,10 @@ int main(const int argc, const char** argv) {
     //     std::cout << points[i] << std::endl;
     // }
 
-    delete[] dataTest;
-    delete[] labelsTest;
-    delete[] dataTraining;
-    delete[] labelTraining;
+    // delete[] dataTest;
+    // delete[] labelsTest;
+    // delete[] dataTraining;
+    // delete[] labelTraining;
 
     return EXIT_SUCCESS;
 }

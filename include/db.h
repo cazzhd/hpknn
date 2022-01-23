@@ -20,6 +20,8 @@
 #define BD_H
 
 /********************************* Includes *******************************/
+#include <vector>
+
 #include "config.h"
 
 /******************************** Constants *******************************/
@@ -102,10 +104,16 @@ class CSVReader {
     CSVReader(const char delimiter = ',');
 
     /**
-     * @brief Get the Data from the CSV file in a float*
+     * @brief Read the Data from the CSV file in a vector of vector of float
      * @param filename The name of the file to read
      */
-    float* getData(const char* filename);
+    float* readData(const char* filename);
+
+    /**
+     * @brief Read the Data from the CSV file in a vector of vector of float
+     * @param filename The name of the file to read
+     */
+    std::vector<std::vector<float>> readData(std::string filename);
 };
 
 #endif
