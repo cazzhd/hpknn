@@ -15,6 +15,10 @@
 # @brief File with the necessary rules to compile the project. Also, documentation is generated
 # @copyright Hpknn (c) 2015 EFFICOMP
 
+# How to know the version openmp
+# export  OMP_DISPLAY_ENV="TRUE"
+# echo |cpp -fopenmp -dM |grep -i open
+
 # ************ Vars ************
 CXX 		= g++
 MPICXX 		?= mpic++
