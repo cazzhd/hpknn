@@ -70,14 +70,14 @@ $(FOLDERS_CREATE):
 
 $(OBJ)/%.o: $(SRC)/%.cpp
 	@echo "\e[33mCompiling module $< \e[0m"
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $<  -o $@
+	$(CXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $<  -o $@
 
 
 # ************ Linking and creating executable ************
 
 $(OUTPUTMAIN): $(OBJECTS)
 	@echo "\n\e[33mLinking and creating executable $@ \e[0m"
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(LFLAGS)
+	$(CXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(LFLAGS)
 
 # ************ Documentation ************
 

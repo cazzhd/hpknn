@@ -25,9 +25,9 @@
 #include <sstream>
 #include <string>
 
-#include "config.h"
-
 /******************************** Constants *******************************/
+template std::vector<std::vector<float>> CSVReader::readData(std::string filename);
+template std::vector<std::vector<unsigned short>> CSVReader::readData(std::string filename);
 
 /********************************* Methods ********************************/
 BBDD::BBDD(const char* filename) {
@@ -149,8 +149,9 @@ float* CSVReader::readData(const char* filename) {
     return dataDb;
 }
 
-std::vector<std::vector<float>> CSVReader::readData(std::string filename) {
-    std::vector<std::vector<float>> dataDb;
+template <typename T>
+std::vector<std::vector<T>> CSVReader::readData(std::string filename) {
+    std::vector<std::vector<T>> dataDb;
     std::ifstream dbFile;
     std::string line;
 
@@ -182,7 +183,7 @@ std::vector<std::vector<float>> CSVReader::readData(std::string filename) {
 
         dbFile.clear();
         dbFile.seekg(0);
-        std::vector<float> tupleData;
+        std::vector<T> tupleData;
         while (getline(dbFile, line)) {
             std::replace(line.begin(), line.end(), ',', ' ');
             std::stringstream ss(line);

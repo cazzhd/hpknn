@@ -31,7 +31,7 @@
 struct Point {
     std::vector<float> data;  //!< Pointer to the data of the point
     float distance;           //!< Distance to the point
-    unsigned int label;       //!< Label of the point
+    unsigned short label;     //!< Label of the point
 
     /**
 	 * @brief Default Construct a new Point object

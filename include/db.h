@@ -25,8 +25,7 @@
 #include "config.h"
 
 /******************************** Constants *******************************/
-const char* const ERROR_DIMENSION_DB =
-    "Error: Number of columns of the database are irregular.";
+const char* const ERROR_DIMENSION_DB = "Error: Number of columns of the database are irregular.";
 const char* const ERROR_OPEN_DB = "Error: Cannot open database file.";
 
 /********************************* Methods ********************************/
@@ -113,7 +112,8 @@ class CSVReader {
      * @brief Read the Data from the CSV file in a vector of vector of float
      * @param filename The name of the file to read
      */
-    std::vector<std::vector<float>> readData(std::string filename);
+    template <typename T>
+    std::vector<std::vector<T>> readData(std::string filename);
 };
 
 #endif
