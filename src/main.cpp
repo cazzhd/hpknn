@@ -47,11 +47,13 @@ int main(const int argc, const char** argv) {
     Config config(argc, argv);
     // std::cout << config << std::endl;
 
+    // Hola mundo
+
     CSVReader csvReader = CSVReader();
     std::vector<std::vector<float>> dataTraining = csvReader.readData<float>(config.dbDataTraining);
     std::vector<std::vector<float>> dataTest = csvReader.readData<float>(config.dbDataTest);
-    std::vector<unsigned short> labelTraining = flatten(csvReader.readData<unsigned short>(config.dbLabelsTraining));
-    std::vector<unsigned short> labelsTest = flatten(csvReader.readData<unsigned short>(config.dbLabelsTest));
+    std::vector<unsigned int> labelTraining = flatten(csvReader.readData<unsigned int>(config.dbLabelsTraining));
+    std::vector<unsigned int> labelsTest = flatten(csvReader.readData<unsigned int>(config.dbLabelsTest));
 
     std::vector<Point> dataTrainingPoints;
     // typedef std::pair<float, unsigned short> Pair;
@@ -66,18 +68,23 @@ int main(const int argc, const char** argv) {
     double begin1, end1;
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     begin1 = omp_get_wtime();
+    bool isSuccess;
+    int counterSuccess = 0;
     for (int i = 0; i < config.nTuples; ++i) {
-        Point pointTest(dataTest[i], labelsTest[0]);
-        KNN(11, dataTrainingPoints, pointTest, euclideanDistance);
+        Point pointTest(dataTest[i], labelsTest[i]);
+        isSuccess = KNN(2, dataTrainingPoints, pointTest, euclideanDistance);
+        if (isSuccess) counterSuccess++;
     }
     end1 = omp_get_wtime();
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
-    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
-    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
-    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
-    std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count() << "[ns]" << std::endl;
-    printf("Work took %f seconds\n", end1 - begin1);
+    std::cout << "Accuracy = " << ((float)counterSuccess / (float)config.nTuples) << std::endl;
+    // std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
+    // std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
+    // std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;
+    // std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count() << "[ns]" << std::endl;
+    std::cout << "Time difference = " << end1 - begin1 << "(s)" << std::endl;
+    // printf("Work took %f seconds\n", end1 - begin1);
 
     // float* dataTest = csvReader.readData(config.dbDataTest.c_str());
     // float* labelsTest = csvReader.readData(config.dbLabelsTest.c_str());

@@ -27,7 +27,7 @@
 
 /******************************** Constants *******************************/
 template std::vector<std::vector<float>> CSVReader::readData(std::string filename);
-template std::vector<std::vector<unsigned short>> CSVReader::readData(std::string filename);
+template std::vector<std::vector<unsigned int>> CSVReader::readData(std::string filename);
 
 /********************************* Methods ********************************/
 BBDD::BBDD(const char* filename) {

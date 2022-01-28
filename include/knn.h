@@ -31,23 +31,23 @@
 struct Point {
     std::vector<float> data;  //!< Pointer to the data of the point
     float distance;           //!< Distance to the point
-    unsigned short label;     //!< Label of the point
+    unsigned int label;       //!< Label of the point
 
     /**
-	 * @brief Default Construct a new Point object
-	 */
+     * @brief Default Construct a new Point object
+     */
     Point();
 
     /**
-	 * @brief Construct a new Point object
-	 * @param data Pointer to the data of the point
-	 * @param label Label of the point
-	 */
+     * @brief Construct a new Point object
+     * @param data Pointer to the data of the point
+     * @param label Label of the point
+     */
     Point(std::vector<float> data, unsigned int label);
 
     /**
-	 * @brief Destroy the Point object
-	 */
+     * @brief Destroy the Point object
+     */
     ~Point();
 
     /**
@@ -65,8 +65,9 @@ struct Point {
  * @param dataTraining The training data
  * @param dataPointTest The test data
  * @param distanceFunction The distance function to use
+ * @return true if the label of the test data is the same as the label of the nearest neighbor
  */
-void KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&));
+bool KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&));
 
 /**
  * @brief Get the Euclidean Distance object
@@ -78,14 +79,18 @@ float euclideanDistance(Point& pointTraining, Point& pointTest);
 
 /**
  * @brief Get the Manhattan object
+ * @param pointTraining The training data
+ * @param pointTest The test data
  * @return float with the Manhattan Distance
  */
-float manhattanDistance();
+float manhattanDistance(Point& pointTraining, Point& pointTest);
 
 /**
  * @brief Get the Minkowski object
+ * @param pointTraining The training data
+ * @param pointTest The test data
  * @return float with the Manhattan Distance
  */
-float minkowskiDistance();
+float minkowskiDistance(Point& pointTraining, Point& pointTest);
 
 #endif

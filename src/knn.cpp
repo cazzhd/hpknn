@@ -23,6 +23,7 @@
 #include <cmath>
 #include <cstring>
 #include <iostream>
+#include <map>
 
 #include "omp.h"
 
@@ -37,7 +38,9 @@ Point::Point(std::vector<float> data, unsigned int label) {
     this->label = label;
 }
 
-Point::~Point() {}
+Point::~Point() {
+    this->data.clear();
+}
 
 std::ostream& operator<<(std::ostream& os, const Point& o) {
     os << "data: " << o.data[0] << std::endl;
@@ -47,7 +50,7 @@ std::ostream& operator<<(std::ostream& os, const Point& o) {
     return os;
 }
 
-void KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&)) {
+bool KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&)) {
     for (size_t i = 0; i < dataTraining.size(); ++i) {
         dataTraining[i].distance = distanceFunction(dataTraining[i], dataTest);
     }
@@ -56,8 +59,18 @@ void KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*dista
         return a.distance < b.distance;
     });
 
-    // for (unsigned short i = 0; i < k; ++i) {
-    //     std::cout << dataTraining[i] << std::endl;
+    std::map<unsigned int, int, std::greater<int>> counters;
+    for (auto it = dataTraining.begin(); it != dataTraining.begin() + k; ++it) {
+        counters[it->label]++;
+    }
+
+    // std::cout << counters.begin()->first << std::endl;
+    // std::cout << dataTest.label << std::endl;
+    // std::cout << ((counters.begin()->first == dataTest.label) ? "True" : "False") << std::endl;
+    return (counters.begin()->first == dataTest.label);
+
+    // for (auto counter : counters) {
+    //     std::cout << counter.first << ": " << counter.second << std::endl;
     // }
 
     // float* actualTupleTest = new float[config.nFeatures];
@@ -83,13 +96,23 @@ void KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*dista
 float euclideanDistance(Point& pointTraining, Point& pointTest) {
     float distance = 0;
 
-    for (int i = 0; i < pointTraining.data.size(); ++i) {
+    // #pragma omp parallel for reduction(+: distance)
+    for (long unsigned int i = 0; i < pointTraining.data.size(); ++i) {
         distance += pow((pointTraining.data[i]) - (pointTest.data[i]), 2);
     }
 
     return sqrt(distance);
 }
 
-float manhattanDistance() {}
+float manhattanDistance(Point& pointTraining, Point& pointTest) {
+    float distance = 0;
 
-float minkowskiDistance() {}
+    // #pragma omp parallel for reduction(+ : distance)
+    for (long unsigned int i = 0; i < pointTraining.data.size(); ++i) {
+        distance += abs((pointTraining.data[i]) - (pointTest.data[i]));
+    }
+
+    return distance;
+}
+
+// float minkowskiDistance(Point& pointTraining, Point& pointTest) {}
