@@ -70,6 +70,17 @@ struct Point {
 bool KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&));
 
 /**
+ * @brief Get the Best K object
+ * @param minValueK The minimum value of K with starts
+ * @param maxValueK The maximum value of K with ends
+ * @param dataTraining The training data
+ * @param dataTest The test data
+ * @param distanceFunction The distance function to use
+ * @return unsigned int The best scoring k value
+ */
+unsigned int getBestK(unsigned short minValueK, unsigned short maxValueK, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&));
+
+/**
  * @brief Get the Euclidean Distance object
  * @param pointTraining The training data
  * @param pointTest The test data

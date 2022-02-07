@@ -74,7 +74,7 @@ $(FOLDERS_CREATE):
 
 $(OBJ)/%.o: $(SRC)/%.cpp
 	@echo "\e[33mCompiling module $< \e[0m"
-	$(CXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $<  -o $@
+	$(CXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 
 # ************ Linking and creating executable ************
@@ -99,13 +99,13 @@ documentation:
 .PHONY: clean
 clean:
 	-@$(RM) $(OUTPUTMAIN)
-	-@$(RMDIR) $(BIN)
+	-@if [ -d $(BIN) ]; then $(RMDIR) $(BIN); fi
 	@echo "\e[31mBianarians removed!"
 	-@$(RM) $(OBJ)/*
-	-@$(RMDIR) $(OBJ)
+	-@if [ -d $(OBJ) ]; then $(RMDIR) $(OBJ); fi
 	@echo "\e[31mObjects removed!"
 	-@$(RM) $(DOC)/html/*
-	-@$(RMDIR) $(DOC)/html
+	-@if [ -d $(DOC)/html ]; then $(RMDIR) $(DOC)/html; fi
 	-@$(RM) $(DOC)/index.html
 	@echo "\e[31mDocs removed!"
 	@echo "\e[31mCleanup complete!"

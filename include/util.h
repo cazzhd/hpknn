@@ -25,6 +25,34 @@
 
 /********************************* Methods ********************************/
 template <typename T>
+std::pair<T, T> min_max_value(const std::vector<std::vector<T>> &data) {
+    std::vector<T> maxValues, minValues;
+    for (const auto &row : data) {
+        maxValues.push_back(*max_element(row.begin(), row.end()));
+        minValues.push_back(*min_element(row.begin(), row.end()));
+    }
+
+    return std::make_pair(*min_element(minValues.begin(), minValues.end()),
+                          *max_element(maxValues.begin(), maxValues.end()));
+}
+
+template <typename T>
+std::vector<std::vector<T>> normalize(const std::vector<std::vector<T>> &data) {
+    std::vector<std::vector<T>> normalizedData;
+    std::pair<T, T> minMaxValue = min_max_value(data);
+
+    for (const auto &row : data) {
+        std::vector<T> normalizedRow;
+        for (const auto &value : row) {
+            T normalizedValue = (value - minMaxValue.first) / (minMaxValue.second - minMaxValue.first);
+            normalizedRow.push_back(normalizedValue);
+        }
+        normalizedData.push_back(normalizedRow);
+    }
+    return normalizedData;
+}
+
+template <typename T>
 std::vector<T> flatten(const std::vector<std::vector<T>> &original) {
     std::vector<T> aux;
     for (const auto &v : original)

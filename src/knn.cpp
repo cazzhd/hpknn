@@ -93,6 +93,26 @@ bool KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*dista
     // delete[] actualTupleTraining;
 }
 
+unsigned int getBestK(unsigned short minValueK, unsigned short maxValueK, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&)) {
+    unsigned int bestK = 0;
+    float bestAccuracy = 0;
+
+    for (unsigned int k = minValueK; k <= maxValueK; ++k) {
+        float accuracy = 0;
+        for (unsigned int i = 0; i < dataTest.size(); ++i) {
+            if (KNN(k, dataTraining, dataTest[i], distanceFunction)) {
+                accuracy++;
+            }
+        }
+        accuracy /= dataTest.size();
+        if (accuracy > bestAccuracy) {
+            bestAccuracy = accuracy;
+            bestK = k;
+        }
+    }
+    return bestK;
+}
+
 float euclideanDistance(Point& pointTraining, Point& pointTest) {
     float distance = 0;
 
