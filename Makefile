@@ -15,10 +15,6 @@
 # @brief File with the necessary rules to compile the project. Also, documentation is generated
 # @copyright Hpknn (c) 2015 EFFICOMP
 
-# How to know the version openmp
-# export  OMP_DISPLAY_ENV="TRUE"
-# echo |cpp -fopenmp -dM |grep -i open
-
 # ************ Vars ************
 CXX 		= g++
 MPICXX 		?= mpic++
@@ -116,3 +112,11 @@ run: all
 
 info:
 	@echo "\e[36mMade by Francisco Rodríguez Jiménez (cazz@correo.ugr.es)\nHpknn (c) 2015 EFFICOMP"
+
+# Show version omp when execute program
+# export  OMP_DISPLAY_ENV="TRUE"
+openmp_version:
+	@echo "\e[36mOpenMP version: $(shell echo | cpp -fopenmp -dM | grep -i open | cut -d '_' -f 2)"
+
+openmpi_version:
+	@echo "\e[36mOpenMPI version: $(shell mpirun --version | head -1 | cut -d " " -f 4)"

@@ -50,7 +50,7 @@ std::ostream& operator<<(std::ostream& os, const Point& o) {
     return os;
 }
 
-bool KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&)) {
+unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&)) {
     for (size_t i = 0; i < dataTraining.size(); ++i) {
         dataTraining[i].distance = distanceFunction(dataTraining[i], dataTest);
     }
@@ -67,7 +67,7 @@ bool KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*dista
     // std::cout << counters.begin()->first << std::endl;
     // std::cout << dataTest.label << std::endl;
     // std::cout << ((counters.begin()->first == dataTest.label) ? "True" : "False") << std::endl;
-    return (counters.begin()->first == dataTest.label);
+    return counters.begin()->first;
 
     // for (auto counter : counters) {
     //     std::cout << counter.first << ": " << counter.second << std::endl;
@@ -111,6 +111,16 @@ unsigned int getBestK(unsigned short minValueK, unsigned short maxValueK, std::v
         }
     }
     return bestK;
+}
+
+std::vector<std::vector<unsigned int>> getConfusionMatrix(std::vector<unsigned int>& labels, std::vector<unsigned int>& labelsPredicted, unsigned int nClasses) {
+    std::vector<std::vector<unsigned int>> confusionMatrix(nClasses, std::vector<unsigned int>(nClasses));
+
+    for (unsigned int i = 0; i < labels.size(); ++i) {
+        confusionMatrix[labels[i]][labelsPredicted[i]]++;
+    }
+
+    return confusionMatrix;
 }
 
 float euclideanDistance(Point& pointTraining, Point& pointTest) {

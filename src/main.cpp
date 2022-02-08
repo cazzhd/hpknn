@@ -70,18 +70,42 @@ int main(const int argc, const char** argv) {
     // std::cout << getBestK(1, 8, dataTrainingPoints, dataTestPoints, euclideanDistance) << std::endl;
 
     double begin1, end1;
+    int counterSuccessTraining = 0, counterSuccessTest = 0;
+    vectorOfData<unsigned int> labelTrainingPredicted;
+    vectorOfData<unsigned int> labelsTestPredicted;
     // std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     begin1 = omp_get_wtime();
-    bool isSuccess;
-    int counterSuccess = 0;
+    for (unsigned int i = 0; i < dataTraining.size(); ++i) {
+        unsigned int labelPredicted = KNN(2, dataTrainingPoints, dataTrainingPoints[i], euclideanDistance);
+        labelTrainingPredicted.push_back(labelPredicted);
+        if (labelPredicted == dataTrainingPoints[i].label) {
+            counterSuccessTraining++;
+        }
+    }
     for (unsigned int i = 0; i < dataTestPoints.size(); ++i) {
-        isSuccess = KNN(2, dataTrainingPoints, dataTestPoints[i], euclideanDistance);
-        if (isSuccess) counterSuccess++;
+        unsigned int labelPredicted = KNN(2, dataTrainingPoints, dataTestPoints[i], euclideanDistance);
+        labelsTestPredicted.push_back(labelPredicted);
+        if (labelPredicted == dataTestPoints[i].label) {
+            counterSuccessTest++;
+        }
     }
     end1 = omp_get_wtime();
     // std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
-    std::cout << "Accuracy = " << ((float)counterSuccess / (float)dataTestPoints.size()) << std::endl;
+    // Get Confusion Matrix
+    vectorOfVectorData<unsigned int> confusionMatrix = getConfusionMatrix(labelsTest, labelsTestPredicted, config.nClasses);
+    // Print Confusion Matrix
+    std::cout << "Confusion Matrix Test: " << std::endl;
+    for (unsigned int i = 0; i < confusionMatrix.size(); ++i) {
+        for (unsigned int j = 0; j < confusionMatrix[i].size(); ++j) {
+            std::cout << confusionMatrix[i][j] << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    std::cout << "Accuracy of K-NN classifier on training set: " << ((float)counterSuccessTraining / (float)dataTrainingPoints.size()) << std::endl;
+    std::cout << "Accuracy of K-NN classifier on test set: " << ((float)counterSuccessTest / (float)dataTestPoints.size()) << std::endl;
+
     // std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;
     // std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::milliseconds>(end - begin).count() << "[ms]" << std::endl;
     // std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count() << "[µs]" << std::endl;

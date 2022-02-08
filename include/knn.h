@@ -65,9 +65,9 @@ struct Point {
  * @param dataTraining The training data
  * @param dataPointTest The test data
  * @param distanceFunction The distance function to use
- * @return true if the label of the test data is the same as the label of the nearest neighbor
+ * @return label predicted
  */
-bool KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&));
+unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&));
 
 /**
  * @brief Get the Best K object
@@ -79,6 +79,15 @@ bool KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*dista
  * @return unsigned int The best scoring k value
  */
 unsigned int getBestK(unsigned short minValueK, unsigned short maxValueK, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&));
+
+/**
+ * @brief Get the Confusion Matrix object
+ * @param labels The labels of the test or training data
+ * @param labelsPredicted The predicted labels with KNN
+ * @param numClasses The number of classes
+ * @return std::vector<std::vector<unsigned int>> that contains the confusion matrix
+ */
+std::vector<std::vector<unsigned int>> getConfusionMatrix(std::vector<unsigned int>& labels, std::vector<unsigned int>& labelsPredicted, unsigned int nClasses);
 
 /**
  * @brief Get the Euclidean Distance object
