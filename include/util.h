@@ -60,4 +60,28 @@ std::vector<T> flatten(const std::vector<std::vector<T>> &original) {
     return aux;
 }
 
+template <typename T>
+std::vector<std::vector<T>> sorting_by_indices_vector(const std::vector<std::vector<T>> &original, const std::vector<unsigned int> &indices) {
+    std::vector<std::vector<T>> sorted;
+    for (unsigned int i = 0; i < original.size(); ++i) {
+        std::vector<T> row;
+        for (unsigned int j = 0; j < original[i].size(); ++j) {
+            row.push_back(original[i][indices[j]]);
+        }
+        sorted.push_back(row);
+    }
+
+    return sorted;
+}
+
+template <typename T>
+std::vector<T> sorting_by_indices_vector(const std::vector<T> &original, const std::vector<unsigned int> &indices) {
+    std::vector<T> sorted;
+    for (unsigned int i = 0; i < original.size(); ++i) {
+        sorted.push_back(original[indices[i]]);
+    }
+
+    return sorted;
+}
+
 #endif

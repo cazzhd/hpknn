@@ -20,6 +20,7 @@ ight Hpknn (c) 2015 EFFICOMP
 
 /********************************* Includes *******************************/
 #include <stdlib.h>
+#include <unistd.h>
 
 #include <algorithm>
 #include <chrono>
@@ -34,7 +35,6 @@ ight Hpknn (c) 2015 EFFICOMP
 #include "knn.h"
 #include "omp.h"
 #include "util.h"
-
 template <typename T>
 using vectorOfVectorData = std::vector<std::vector<T>>;
 template <typename T>
@@ -53,17 +53,22 @@ int main(const int argc, const char** argv) {
     CSVReader csvReader = CSVReader();
     vectorOfVectorData<float> dataTraining = normalize(csvReader.readData<float>(config.dbDataTraining));
     vectorOfVectorData<float> dataTest = normalize(csvReader.readData<float>(config.dbDataTest));
-    vectorOfData<unsigned int> labelTraining = flatten(csvReader.readData<unsigned int>(config.dbLabelsTraining));
+    vectorOfData<unsigned int> labelsTraining = flatten(csvReader.readData<unsigned int>(config.dbLabelsTraining));
     vectorOfData<unsigned int> labelsTest = flatten(csvReader.readData<unsigned int>(config.dbLabelsTest));
+    vectorOfData<unsigned int> MRMR = flatten(csvReader.readData<unsigned int>("db/essex104_csv/MRMR104.csv"));
+
+    // Sorting by best features (MRMR)
+    vectorOfVectorData<float> dataTrainingSorted = sorting_by_indices_vector(dataTraining, MRMR);
+    vectorOfVectorData<float> dataTestSorted = sorting_by_indices_vector(dataTest, MRMR);
 
     vectorOfData<Point> dataTrainingPoints;
     vectorOfData<Point> dataTestPoints;
-    for (unsigned int i = 0; i < dataTraining.size(); ++i) {
-        Point trainingPoint(dataTraining[i], labelTraining[i]);
+    for (unsigned int i = 0; i < dataTrainingSorted.size(); ++i) {
+        Point trainingPoint(dataTrainingSorted[i], labelsTraining[i]);
         dataTrainingPoints.push_back(trainingPoint);
     }
-    for (unsigned int i = 0; i < dataTest.size(); ++i) {
-        Point testPoint(dataTest[i], labelsTest[i]);
+    for (unsigned int i = 0; i < dataTestSorted.size(); ++i) {
+        Point testPoint(dataTestSorted[i], labelsTest[i]);
         dataTestPoints.push_back(testPoint);
     }
 
