@@ -14,8 +14,7 @@
  * @date 26/06/2021
  * @brief a Parallel and Distributed K-NN for Energyaware Heterogeneous
  * Platforms
- * @copyr#include <chrono>
-ight Hpknn (c) 2015 EFFICOMP
+ * @copyright Hpknn (c) 2015 EFFICOMP
  */
 
 /********************************* Includes *******************************/

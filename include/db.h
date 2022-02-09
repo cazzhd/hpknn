@@ -97,7 +97,6 @@ class CSVReader {
     /********** Methods ***********/
     /**
      * @brief Constructor of the class
-     * @param filename The name of the file to read
      * @param delimiter The delimiter of the CSV file, default ','
      */
     CSVReader(const char delimiter = ',');

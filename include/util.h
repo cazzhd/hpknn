@@ -8,7 +8,7 @@
  * Spanish 'Ministerio de Ciencia, Innovación y Universidades' under grant number PGC2018-098813-B-C31.\n
  * European Regional Development Fund (ERDF).
  *
- * @file utils.h
+ * @file util.h
  * @author Francisco Rodríguez Jiménez
  * @date 23/01/2022
  * @brief Function declarations of Utils implementations

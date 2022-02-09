@@ -61,9 +61,9 @@ struct Point {
 
 /**
  * @brief Using the KNN algorithm to find the nearest neighbors
- * @param K The number of neighbors to find
+ * @param k The number of neighbors to find
  * @param dataTraining The training data
- * @param dataPointTest The test data
+ * @param dataTest The Point to find the nearest neighbors
  * @param distanceFunction The distance function to use
  * @return label predicted
  */
@@ -74,7 +74,7 @@ unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float
  * @param minValueK The minimum value of K with starts
  * @param maxValueK The maximum value of K with ends
  * @param dataTraining The training data
- * @param dataTest The test data
+ * @param dataTest The Point to find the nearest neighbors
  * @param distanceFunction The distance function to use
  * @return unsigned int The best scoring k value
  */
@@ -84,7 +84,7 @@ unsigned int getBestK(unsigned short minValueK, unsigned short maxValueK, std::v
  * @brief Get the Confusion Matrix object
  * @param labels The labels of the test or training data
  * @param labelsPredicted The predicted labels with KNN
- * @param numClasses The number of classes
+ * @param nClasses The number of classes
  * @return std::vector<std::vector<unsigned int>> that contains the confusion matrix
  */
 std::vector<std::vector<unsigned int>> getConfusionMatrix(std::vector<unsigned int>& labels, std::vector<unsigned int>& labelsPredicted, unsigned int nClasses);

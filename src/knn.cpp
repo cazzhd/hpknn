@@ -126,7 +126,7 @@ std::vector<std::vector<unsigned int>> getConfusionMatrix(std::vector<unsigned i
 float euclideanDistance(Point& pointTraining, Point& pointTest) {
     float distance = 0;
 
-    // #pragma omp parallel for reduction(+: distance)
+    #pragma omp parallel for reduction(+: distance)
     for (long unsigned int i = 0; i < pointTraining.data.size(); ++i) {
         distance += pow((pointTraining.data[i]) - (pointTest.data[i]), 2);
     }
