@@ -50,6 +50,7 @@ int main(const int argc, const char** argv) {
     // std::cout << config << std::endl;
 
     CSVReader csvReader = CSVReader();
+    // Use normalize get the data normalized and score is little better
     vectorOfVectorData<float> dataTraining = csvReader.readData<float>(config.dbDataTraining);
     vectorOfVectorData<float> dataTest = csvReader.readData<float>(config.dbDataTest);
     vectorOfData<unsigned int> labelsTraining = flatten(csvReader.readData<unsigned int>(config.dbLabelsTraining));
@@ -72,8 +73,8 @@ int main(const int argc, const char** argv) {
     }
 
     // Get the best k value
-    std::pair<unsigned int, unsigned int> bestHyperParams = getBestK(2, 2, dataTrainingPoints, dataTestPoints, euclideanDistance);
-    std::cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << std::endl;
+    // std::pair<unsigned int, unsigned int> bestHyperParams = getBestK(2, 3, dataTrainingPoints, dataTestPoints, euclideanDistance);
+    // std::cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << std::endl;
 
     double begin1, end1;
     int counterSuccessTraining = 0, counterSuccessTest = 0;
@@ -89,7 +90,7 @@ int main(const int argc, const char** argv) {
     //     }
     // }
     for (unsigned int i = 0; i < dataTestPoints.size(); ++i) {
-        unsigned int labelPredicted = KNN(bestHyperParams.first, dataTrainingPoints, dataTestPoints[i], euclideanDistance, bestHyperParams.second);
+        unsigned int labelPredicted = KNN(2, dataTrainingPoints, dataTestPoints[i], euclideanDistance, 54);
         labelsTestPredicted.push_back(labelPredicted);
         if (labelPredicted == dataTestPoints[i].label) {
             counterSuccessTest++;
