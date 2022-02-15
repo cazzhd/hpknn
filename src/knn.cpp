@@ -50,9 +50,9 @@ std::ostream& operator<<(std::ostream& os, const Point& o) {
     return os;
 }
 
-unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&)) {
+unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int), unsigned int nFeatures) {
     for (size_t i = 0; i < dataTraining.size(); ++i) {
-        dataTraining[i].distance = distanceFunction(dataTraining[i], dataTest);
+        dataTraining[i].distance = distanceFunction(dataTraining[i], dataTest, nFeatures);
     }
 
     sort(dataTraining.begin(), dataTraining.end(), [](Point& a, Point& b) {
@@ -93,24 +93,31 @@ unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float
     // delete[] actualTupleTraining;
 }
 
-unsigned int getBestK(unsigned short minValueK, unsigned short maxValueK, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&)) {
+std::pair<unsigned int, unsigned int> getBestK(unsigned short minValueK, unsigned short maxValueK, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int)) {
     unsigned int bestK = 0;
+    unsigned int bestNFeatures = 0;
     float bestAccuracy = 0;
 
     for (unsigned int k = minValueK; k <= maxValueK; ++k) {
-        float accuracy = 0;
-        for (unsigned int i = 0; i < dataTest.size(); ++i) {
-            if (KNN(k, dataTraining, dataTest[i], distanceFunction)) {
-                accuracy++;
+        for (unsigned int f = 1; f < 101; ++f) {
+            float accuracy = 0;
+            std::vector<unsigned int> labelsPredicted;
+            for (unsigned int i = 0; i < dataTest.size(); ++i) {
+                unsigned int labelPredicted = KNN(k, dataTraining, dataTest[i], distanceFunction, f);
+                if (labelPredicted == dataTest[i].label) {
+                    accuracy++;
+                }
             }
-        }
-        accuracy /= dataTest.size();
-        if (accuracy > bestAccuracy) {
-            bestAccuracy = accuracy;
-            bestK = k;
+            accuracy /= dataTest.size();
+            if (accuracy > bestAccuracy) {
+                bestAccuracy = accuracy;
+                bestK = k;
+                bestNFeatures = f;
+            }
+            // std::cout << k << " " << f << " " << accuracy << std::endl;
         }
     }
-    return bestK;
+    return std::make_pair(bestK, bestNFeatures);
 }
 
 std::vector<std::vector<unsigned int>> getConfusionMatrix(std::vector<unsigned int>& labels, std::vector<unsigned int>& labelsPredicted, unsigned int nClasses) {
@@ -123,11 +130,12 @@ std::vector<std::vector<unsigned int>> getConfusionMatrix(std::vector<unsigned i
     return confusionMatrix;
 }
 
-float euclideanDistance(Point& pointTraining, Point& pointTest) {
+float euclideanDistance(Point& pointTraining, Point& pointTest, unsigned int nFeatures) {
     float distance = 0;
 
-    #pragma omp parallel for reduction(+: distance)
-    for (long unsigned int i = 0; i < pointTraining.data.size(); ++i) {
+#pragma omp parallel for reduction(+ \
+                                   : distance)
+    for (long unsigned int i = 0; i < nFeatures; ++i) {
         distance += pow((pointTraining.data[i]) - (pointTest.data[i]), 2);
     }
 

@@ -50,8 +50,8 @@ int main(const int argc, const char** argv) {
     // std::cout << config << std::endl;
 
     CSVReader csvReader = CSVReader();
-    vectorOfVectorData<float> dataTraining = normalize(csvReader.readData<float>(config.dbDataTraining));
-    vectorOfVectorData<float> dataTest = normalize(csvReader.readData<float>(config.dbDataTest));
+    vectorOfVectorData<float> dataTraining = csvReader.readData<float>(config.dbDataTraining);
+    vectorOfVectorData<float> dataTest = csvReader.readData<float>(config.dbDataTest);
     vectorOfData<unsigned int> labelsTraining = flatten(csvReader.readData<unsigned int>(config.dbLabelsTraining));
     vectorOfData<unsigned int> labelsTest = flatten(csvReader.readData<unsigned int>(config.dbLabelsTest));
     vectorOfData<unsigned int> MRMR = flatten(csvReader.readData<unsigned int>("db/essex104_csv/MRMR104.csv"));
@@ -71,7 +71,9 @@ int main(const int argc, const char** argv) {
         dataTestPoints.push_back(testPoint);
     }
 
-    // std::cout << getBestK(1, 8, dataTrainingPoints, dataTestPoints, euclideanDistance) << std::endl;
+    // Get the best k value
+    std::pair<unsigned int, unsigned int> bestHyperParams = getBestK(2, 2, dataTrainingPoints, dataTestPoints, euclideanDistance);
+    std::cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << std::endl;
 
     double begin1, end1;
     int counterSuccessTraining = 0, counterSuccessTest = 0;
@@ -79,15 +81,15 @@ int main(const int argc, const char** argv) {
     vectorOfData<unsigned int> labelsTestPredicted;
     // std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     begin1 = omp_get_wtime();
-    for (unsigned int i = 0; i < dataTraining.size(); ++i) {
-        unsigned int labelPredicted = KNN(2, dataTrainingPoints, dataTrainingPoints[i], euclideanDistance);
-        labelTrainingPredicted.push_back(labelPredicted);
-        if (labelPredicted == dataTrainingPoints[i].label) {
-            counterSuccessTraining++;
-        }
-    }
+    // for (unsigned int i = 0; i < dataTraining.size(); ++i) {
+    //     unsigned int labelPredicted = KNN(bestK, dataTrainingPoints, dataTrainingPoints[i], euclideanDistance);
+    //     labelTrainingPredicted.push_back(labelPredicted);
+    //     if (labelPredicted == dataTrainingPoints[i].label) {
+    //         counterSuccessTraining++;
+    //     }
+    // }
     for (unsigned int i = 0; i < dataTestPoints.size(); ++i) {
-        unsigned int labelPredicted = KNN(2, dataTrainingPoints, dataTestPoints[i], euclideanDistance);
+        unsigned int labelPredicted = KNN(bestHyperParams.first, dataTrainingPoints, dataTestPoints[i], euclideanDistance, bestHyperParams.second);
         labelsTestPredicted.push_back(labelPredicted);
         if (labelPredicted == dataTestPoints[i].label) {
             counterSuccessTest++;
@@ -107,7 +109,7 @@ int main(const int argc, const char** argv) {
         std::cout << std::endl;
     }
 
-    std::cout << "Accuracy of K-NN classifier on training set: " << ((float)counterSuccessTraining / (float)dataTrainingPoints.size()) << std::endl;
+    // std::cout << "Accuracy of K-NN classifier on training set: " << ((float)counterSuccessTraining / (float)dataTrainingPoints.size()) << std::endl;
     std::cout << "Accuracy of K-NN classifier on test set: " << ((float)counterSuccessTest / (float)dataTestPoints.size()) << std::endl;
 
     // std::cout << "Time difference = " << std::chrono::duration_cast<std::chrono::seconds>(end - begin).count() << "[s]" << std::endl;

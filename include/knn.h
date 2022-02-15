@@ -65,9 +65,10 @@ struct Point {
  * @param dataTraining The training data
  * @param dataTest The Point to find the nearest neighbors
  * @param distanceFunction The distance function to use
+ * @param nFeatures The number of features to use in the distance function
  * @return label predicted
  */
-unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&));
+unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int), unsigned int nFeatures);
 
 /**
  * @brief Get the Best K object
@@ -76,9 +77,9 @@ unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float
  * @param dataTraining The training data
  * @param dataTest The Point to find the nearest neighbors
  * @param distanceFunction The distance function to use
- * @return unsigned int The best scoring k value
+ * @return Pair with the best K and the best numbers of predictions
  */
-unsigned int getBestK(unsigned short minValueK, unsigned short maxValueK, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&));
+std::pair<unsigned int, unsigned int> getBestK(unsigned short minValueK, unsigned short maxValueK, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int));
 
 /**
  * @brief Get the Confusion Matrix object
@@ -93,9 +94,10 @@ std::vector<std::vector<unsigned int>> getConfusionMatrix(std::vector<unsigned i
  * @brief Get the Euclidean Distance object
  * @param pointTraining The training data
  * @param pointTest The test data
+ * @param nFeatures The number of features to use in the distance function
  * @return float with the Euclidean Distance
  */
-float euclideanDistance(Point& pointTraining, Point& pointTest);
+float euclideanDistance(Point& pointTraining, Point& pointTest, unsigned int nFeatures);
 
 /**
  * @brief Get the Manhattan object
