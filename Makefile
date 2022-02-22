@@ -22,6 +22,7 @@ MPICXX 		?= mpic++
 CXXFLAGS	:= -std=c++17 -Wall -Wextra -g
 OPT 		:= -O2 -funroll-loops
 OMP 		= -fopenmp
+GPROF 		= -pg
 
 BIN		:= bin
 SRC		:= src
@@ -70,14 +71,18 @@ $(FOLDERS_CREATE):
 
 $(OBJ)/%.o: $(SRC)/%.cpp
 	@echo "\e[33mCompiling module $< \e[0m"
-	$(CXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+	@if [ $< = "src/main.cpp" ]; then\
+		$(CXX) $(GPROF) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $< -o $@;\
+	else\
+		$(CXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $< -o $@;\
+	fi
 
 
 # ************ Linking and creating executable ************
 
 $(OUTPUTMAIN): $(OBJECTS)
 	@echo "\n\e[33mLinking and creating executable $@ \e[0m"
-	$(CXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(LFLAGS)
+	$(CXX) $(GPROF)  $(OMP) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(LFLAGS)
 
 # ************ Documentation ************
 
