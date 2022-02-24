@@ -106,22 +106,22 @@ float* CSVReader::readData(const char* filename) {
 
     /********** Getting the database dimensions ***********/
     if (dbFile.is_open()) {
-        float data;
+        std::string data;
         unsigned int nCols = 0, nRows = 1;
 
         getline(dbFile, line);
-        std::replace(line.begin(), line.end(), ',', ' ');
+        // std::replace(line.begin(), line.end(), ',', ' ');
         std::stringstream ss(line);
-        while (ss >> data) {
+        while (std::getline(ss, data, this->delimiter)) {
             ++nCols;
         }
 
         while (getline(dbFile, line)) {
             ++nRows;
-            std::replace(line.begin(), line.end(), ',', ' ');
+            // std::replace(line.begin(), line.end(), ',', ' ');
             std::stringstream ss(line);
             unsigned tmpNcols = 0;
-            while (ss >> data) {
+            while (std::getline(ss, data, this->delimiter)) {
                 ++tmpNcols;
             }
 
@@ -135,10 +135,10 @@ float* CSVReader::readData(const char* filename) {
 
         unsigned int i = 0;
         while (getline(dbFile, line)) {
-            std::replace(line.begin(), line.end(), ',', ' ');
+            // std::replace(line.begin(), line.end(), ',', ' ');
             std::stringstream ss(line);
-            while (ss >> dataDb[i]) {
-                ++i;
+            while (ss >> data) {
+                dataDb[i++] = std::stof(data);
             }
         }
 
@@ -159,22 +159,22 @@ std::vector<std::vector<T>> CSVReader::readData(std::string filename) {
 
     /********** Getting the database dimensions ***********/
     if (dbFile.is_open()) {
-        float data;
+        std::string data;
         unsigned int nCols = 0, nRows = 1;
 
         getline(dbFile, line);
-        std::replace(line.begin(), line.end(), ',', ' ');
+        // std::replace(line.begin(), line.end(), ',', ' ');
         std::stringstream ss(line);
-        while (ss >> data) {
+        while (std::getline(ss, data, this->delimiter)) {
             ++nCols;
         }
 
         while (getline(dbFile, line)) {
             ++nRows;
-            std::replace(line.begin(), line.end(), ',', ' ');
+            // std::replace(line.begin(), line.end(), ',', ' ');
             std::stringstream ss(line);
             unsigned tmpNcols = 0;
-            while (ss >> data) {
+            while (std::getline(ss, data, this->delimiter)) {
                 ++tmpNcols;
             }
 
@@ -185,10 +185,10 @@ std::vector<std::vector<T>> CSVReader::readData(std::string filename) {
         dbFile.seekg(0);
         std::vector<T> tupleData;
         while (getline(dbFile, line)) {
-            std::replace(line.begin(), line.end(), ',', ' ');
+            // std::replace(line.begin(), line.end(), ',', ' ');
             std::stringstream ss(line);
-            while (ss >> data) {
-                tupleData.push_back(data);
+            while (std::getline(ss, data, this->delimiter)) {
+                tupleData.push_back(std::stof(data));
             }
             dataDb.push_back(tupleData);
             tupleData.clear();
