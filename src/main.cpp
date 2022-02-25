@@ -34,6 +34,7 @@
 #include "knn.h"
 #include "omp.h"
 #include "util.h"
+
 template <typename T>
 using vectorOfVectorData = std::vector<std::vector<T>>;
 template <typename T>
@@ -47,6 +48,7 @@ using vectorOfData = std::vector<T>;
  */
 int main(const int argc, const char** argv) {
     Config config(argc, argv);
+    
     // std::cout << config << std::endl;
 
     CSVReader csvReader = CSVReader();
@@ -72,9 +74,6 @@ int main(const int argc, const char** argv) {
         dataTestPoints.push_back(testPoint);
     }
 
-    // Get the best k value
-    // std::pair<unsigned int, unsigned int> bestHyperParams = getBestK(2, 3, dataTrainingPoints, dataTestPoints, euclideanDistance);
-    // std::cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << std::endl;
 
     double begin1, end1;
     int counterSuccessTraining = 0, counterSuccessTest = 0;
@@ -82,13 +81,17 @@ int main(const int argc, const char** argv) {
     vectorOfData<unsigned int> labelsTestPredicted;
     // std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     begin1 = omp_get_wtime();
+    // Get the best k value
+    std::pair<unsigned int, unsigned int> bestHyperParams = getBestK(1, 4, dataTrainingPoints, dataTestPoints, euclideanDistance);
+    std::cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << std::endl;
     // for (unsigned int i = 0; i < dataTraining.size(); ++i) {
-    //     unsigned int labelPredicted = KNN(bestK, dataTrainingPoints, dataTrainingPoints[i], euclideanDistance);
+    //     unsigned int labelPredicted = KNN(2, dataTrainingPoints, dataTrainingPoints[i], euclideanDistance, 54);
     //     labelTrainingPredicted.push_back(labelPredicted);
     //     if (labelPredicted == dataTrainingPoints[i].label) {
     //         counterSuccessTraining++;
     //     }
     // }
+    end1 = omp_get_wtime();
     for (unsigned int i = 0; i < dataTestPoints.size(); ++i) {
         unsigned int labelPredicted = KNN(2, dataTrainingPoints, dataTestPoints[i], euclideanDistance, 54);
         labelsTestPredicted.push_back(labelPredicted);
@@ -96,7 +99,6 @@ int main(const int argc, const char** argv) {
             counterSuccessTest++;
         }
     }
-    end1 = omp_get_wtime();
     // std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
 
     // Get Confusion Matrix

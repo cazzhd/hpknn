@@ -22,6 +22,7 @@
 /********************************* Includes *******************************/
 #include <fstream>
 #include <vector>
+#include <map>
 
 #include "config.h"
 
@@ -30,7 +31,6 @@
 /********************************* Methods ********************************/
 struct Point {
     std::vector<float> data;  //!< Pointer to the data of the point
-    float distance;           //!< Distance to the point
     unsigned int label;       //!< Label of the point
 
     /**
@@ -58,6 +58,24 @@ struct Point {
      */
     friend std::ostream& operator<<(std::ostream& os, const Point& o);
 };
+
+/**
+ * @brief Calculates the distance from testpoint to all data
+ * @param dataTraining The training data
+ * @param dataTest The Point to find the nearest neighbors
+ * @param distanceFunction The distance function to use
+ * @param nFeatures The number of features to use in the distance function
+ * @return vectors of pairs with distance and label
+ */
+std::vector<std::pair<float, unsigned int>> getDistances(std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int), unsigned int nFeatures);
+
+/**
+ * @brief Create a map with 
+ * @param k number of neighbors used to classify
+ * @param distances Vector of pairs with distance and label
+ * @return the most frequent class
+ */
+unsigned int getMostFrequentClass(int k, std::vector<std::pair<float, unsigned int>>& distances);
 
 /**
  * @brief Using the KNN algorithm to find the nearest neighbors

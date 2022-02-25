@@ -18,23 +18,22 @@
 
 /********************************* Includes *******************************/
 #include "knn.h"
+#include "tqdm.h"
 
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <iostream>
-#include <map>
 
 #include "omp.h"
 
 /******************************** Constants *******************************/
 
 /********************************* Methods ********************************/
-Point::Point() : distance(0), label(-1) {}
+Point::Point() :label(-1) {}
 
 Point::Point(std::vector<float> data, unsigned int label) {
     this->data = data;
-    this->distance = 0;
     this->label = label;
 }
 
@@ -44,30 +43,46 @@ Point::~Point() {
 
 std::ostream& operator<<(std::ostream& os, const Point& o) {
     os << "data: " << o.data[0] << std::endl;
-    os << "distance: " << o.distance << std::endl;
     os << "label: " << o.label << std::endl;
 
     return os;
 }
 
-unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int), unsigned int nFeatures) {
+std::vector<std::pair<float, unsigned int>> getDistances(std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int), unsigned int nFeatures) {
+    std::vector<std::pair<float, unsigned int>> distances;
+    
     for (size_t i = 0; i < dataTraining.size(); ++i) {
-        dataTraining[i].distance = distanceFunction(dataTraining[i], dataTest, nFeatures);
+        distances.push_back(std::make_pair(distanceFunction(dataTraining[i], dataTest, nFeatures), dataTraining[i].label));
+        // dataTraining[i].distance = distanceFunction(dataTraining[i], dataTest, nFeatures);
     }
 
-    sort(dataTraining.begin(), dataTraining.end(), [](Point& a, Point& b) {
-        return a.distance < b.distance;
+    // sort(distances.begin(), distances.end(), [](Point& a, Point& b) {
+    //     return a.first < b.distance;
+    // });
+    
+    std::sort(distances.begin(), distances.end(), [](const std::pair<float, unsigned int>& a, const std::pair<float, unsigned int>& b) {
+        return a.first < b.first;
     });
+    
+    return distances;
+}
 
+unsigned int getMostFrequentClass(int k, std::vector<std::pair<float, unsigned int>>& distances) {
     std::map<unsigned int, int, std::greater<int>> counters;
-    for (auto it = dataTraining.begin(); it != dataTraining.begin() + k; ++it) {
-        counters[it->label]++;
+    for (auto it = distances.begin(); it != distances.begin() + k; ++it) {
+        counters[it->second]++;
     }
+    
+    return counters.begin()->first;
+}
+
+unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int), unsigned int nFeatures) {
+    std::vector<std::pair<float, unsigned int>> distances = getDistances(dataTraining, dataTest, distanceFunction, nFeatures);
+    return getMostFrequentClass(k, distances);
 
     // std::cout << counters.begin()->first << std::endl;
     // std::cout << dataTest.label << std::endl;
     // std::cout << ((counters.begin()->first == dataTest.label) ? "True" : "False") << std::endl;
-    return counters.begin()->first;
 
     // for (auto counter : counters) {
     //     std::cout << counter.first << ": " << counter.second << std::endl;
@@ -97,26 +112,36 @@ std::pair<unsigned int, unsigned int> getBestK(unsigned short minValueK, unsigne
     unsigned int bestK = 0;
     unsigned int bestNFeatures = 0;
     float bestAccuracy = 0;
-
-    for (unsigned int k = minValueK; k <= maxValueK; ++k) {
-        for (unsigned int f = 1; f < 101; ++f) {
-            float accuracy = 0;
+    tqdm bar;
+    bar.set_theme_braille();
+    
+    // Iterate for all features
+    for (unsigned int f = 1; f < 60 ; ++f) {
+        bar.progress(f, 60);
+        std::vector<float> vectorAccuracies(maxValueK - minValueK + 1, 0);
+        for (unsigned int i = 0; i < dataTest.size(); ++i) {
             std::vector<unsigned int> labelsPredicted;
-            for (unsigned int i = 0; i < dataTest.size(); ++i) {
-                unsigned int labelPredicted = KNN(k, dataTraining, dataTest[i], distanceFunction, f);
-                if (labelPredicted == dataTest[i].label) {
-                    accuracy++;
+            std::vector<std::pair<float, unsigned int>> distances;
+            distances = getDistances(dataTraining, dataTest[i], distanceFunction, f);
+            for (unsigned int k = minValueK; k <= maxValueK; ++k) {
+                unsigned int labelPredicted = getMostFrequentClass(k, distances);
+                if (labelPredicted == distances[k].second) {
+                    vectorAccuracies[k - minValueK]++;
                 }
             }
-            accuracy /= dataTest.size();
-            if (accuracy > bestAccuracy) {
-                bestAccuracy = accuracy;
-                bestK = k;
+        }
+        // Iterate for vectorAccuracies
+        for (unsigned int i = 0; i < vectorAccuracies.size(); ++i) {
+            vectorAccuracies[i] /= dataTest.size();
+            if (vectorAccuracies[i] > bestAccuracy) {
+                bestAccuracy = vectorAccuracies[i];
+                bestK = i + minValueK;
                 bestNFeatures = f;
             }
-            // std::cout << k << " " << f << " " << accuracy << std::endl;
         }
     }
+    
+    bar.finish();
     return std::make_pair(bestK, bestNFeatures);
 }
 
