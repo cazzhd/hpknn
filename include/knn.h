@@ -21,8 +21,8 @@
 
 /********************************* Includes *******************************/
 #include <fstream>
-#include <vector>
 #include <map>
+#include <vector>
 
 #include "config.h"
 
@@ -70,7 +70,7 @@ struct Point {
 std::vector<std::pair<float, unsigned int>> getDistances(std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int), unsigned int nFeatures);
 
 /**
- * @brief Create a map with 
+ * @brief Create a map with
  * @param k number of neighbors used to classify
  * @param distances Vector of pairs with distance and label
  * @return the most frequent class

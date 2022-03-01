@@ -18,7 +18,6 @@
 
 /********************************* Includes *******************************/
 #include "knn.h"
-#include "tqdm.h"
 
 #include <algorithm>
 #include <cmath>
@@ -26,11 +25,12 @@
 #include <iostream>
 
 #include "omp.h"
+#include "tqdm.h"
 
 /******************************** Constants *******************************/
 
 /********************************* Methods ********************************/
-Point::Point() :label(-1) {}
+Point::Point() : label(-1) {}
 
 Point::Point(std::vector<float> data, unsigned int label) {
     this->data = data;
@@ -50,7 +50,7 @@ std::ostream& operator<<(std::ostream& os, const Point& o) {
 
 std::vector<std::pair<float, unsigned int>> getDistances(std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int), unsigned int nFeatures) {
     std::vector<std::pair<float, unsigned int>> distances;
-    
+
     for (size_t i = 0; i < dataTraining.size(); ++i) {
         distances.push_back(std::make_pair(distanceFunction(dataTraining[i], dataTest, nFeatures), dataTraining[i].label));
         // dataTraining[i].distance = distanceFunction(dataTraining[i], dataTest, nFeatures);
@@ -59,11 +59,11 @@ std::vector<std::pair<float, unsigned int>> getDistances(std::vector<Point>& dat
     // sort(distances.begin(), distances.end(), [](Point& a, Point& b) {
     //     return a.first < b.distance;
     // });
-    
+
     std::sort(distances.begin(), distances.end(), [](const std::pair<float, unsigned int>& a, const std::pair<float, unsigned int>& b) {
         return a.first < b.first;
     });
-    
+
     return distances;
 }
 
@@ -72,7 +72,7 @@ unsigned int getMostFrequentClass(int k, std::vector<std::pair<float, unsigned i
     for (auto it = distances.begin(); it != distances.begin() + k; ++it) {
         counters[it->second]++;
     }
-    
+
     return counters.begin()->first;
 }
 
@@ -114,18 +114,18 @@ std::pair<unsigned int, unsigned int> getBestK(unsigned short minValueK, unsigne
     float bestAccuracy = 0;
     tqdm bar;
     bar.set_theme_braille();
-    
+
     // Iterate for all features
-    for (unsigned int f = 1; f < 60 ; ++f) {
-        bar.progress(f, 60);
+    for (unsigned int f = 1; f < 500; ++f) {
+        bar.progress(f, 500);
         std::vector<float> vectorAccuracies(maxValueK - minValueK + 1, 0);
+        #pragma omp parallel for
         for (unsigned int i = 0; i < dataTest.size(); ++i) {
             std::vector<unsigned int> labelsPredicted;
-            std::vector<std::pair<float, unsigned int>> distances;
-            distances = getDistances(dataTraining, dataTest[i], distanceFunction, f);
+            std::vector<std::pair<float, unsigned int>> distances = getDistances(dataTraining, dataTest[i], distanceFunction, f);
             for (unsigned int k = minValueK; k <= maxValueK; ++k) {
                 unsigned int labelPredicted = getMostFrequentClass(k, distances);
-                if (labelPredicted == distances[k].second) {
+                if (labelPredicted == dataTest[i].label) {
                     vectorAccuracies[k - minValueK]++;
                 }
             }
@@ -140,7 +140,7 @@ std::pair<unsigned int, unsigned int> getBestK(unsigned short minValueK, unsigne
             }
         }
     }
-    
+
     bar.finish();
     return std::make_pair(bestK, bestNFeatures);
 }

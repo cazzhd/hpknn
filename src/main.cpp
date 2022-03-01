@@ -18,6 +18,7 @@
  */
 
 /********************************* Includes *******************************/
+#include <math.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -48,7 +49,7 @@ using vectorOfData = std::vector<T>;
  */
 int main(const int argc, const char** argv) {
     Config config(argc, argv);
-    
+
     // std::cout << config << std::endl;
 
     CSVReader csvReader = CSVReader();
@@ -74,7 +75,6 @@ int main(const int argc, const char** argv) {
         dataTestPoints.push_back(testPoint);
     }
 
-
     double begin1, end1;
     int counterSuccessTraining = 0, counterSuccessTest = 0;
     vectorOfData<unsigned int> labelTrainingPredicted;
@@ -82,7 +82,8 @@ int main(const int argc, const char** argv) {
     // std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
     begin1 = omp_get_wtime();
     // Get the best k value
-    std::pair<unsigned int, unsigned int> bestHyperParams = getBestK(1, 4, dataTrainingPoints, dataTestPoints, euclideanDistance);
+    // floor(sqrt(config.nTuples))
+    std::pair<unsigned int, unsigned int> bestHyperParams = getBestK(1, config.nTuples, dataTrainingPoints, dataTestPoints, euclideanDistance);
     std::cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << std::endl;
     // for (unsigned int i = 0; i < dataTraining.size(); ++i) {
     //     unsigned int labelPredicted = KNN(2, dataTrainingPoints, dataTrainingPoints[i], euclideanDistance, 54);
@@ -93,7 +94,7 @@ int main(const int argc, const char** argv) {
     // }
     end1 = omp_get_wtime();
     for (unsigned int i = 0; i < dataTestPoints.size(); ++i) {
-        unsigned int labelPredicted = KNN(2, dataTrainingPoints, dataTestPoints[i], euclideanDistance, 54);
+        unsigned int labelPredicted = KNN(bestHyperParams.first, dataTrainingPoints, dataTestPoints[i], euclideanDistance, bestHyperParams.second);
         labelsTestPredicted.push_back(labelPredicted);
         if (labelPredicted == dataTestPoints[i].label) {
             counterSuccessTest++;
