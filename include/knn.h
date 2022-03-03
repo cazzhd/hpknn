@@ -97,7 +97,7 @@ unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float
  * @param distanceFunction The distance function to use
  * @return Pair with the best K and the best numbers of predictions
  */
-std::pair<unsigned int, unsigned int> getBestK(unsigned short minValueK, unsigned short maxValueK, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int));
+std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValueK, unsigned short maxValueK, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int));
 
 /**
  * @brief Get the Confusion Matrix object
@@ -121,16 +121,9 @@ float euclideanDistance(Point& pointTraining, Point& pointTest, unsigned int nFe
  * @brief Get the Manhattan object
  * @param pointTraining The training data
  * @param pointTest The test data
+ * @param nFeatures The number of features to use in the distance function
  * @return float with the Manhattan Distance
  */
-float manhattanDistance(Point& pointTraining, Point& pointTest);
-
-/**
- * @brief Get the Minkowski object
- * @param pointTraining The training data
- * @param pointTest The test data
- * @return float with the Manhattan Distance
- */
-float minkowskiDistance(Point& pointTraining, Point& pointTest);
+float manhattanDistance(Point& pointTraining, Point& pointTest, unsigned int nFeatures);
 
 #endif

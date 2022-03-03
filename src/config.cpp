@@ -60,6 +60,7 @@ Config::Config(const int argc, const char** argv) {
     struct_mapping::reg(&Config::dbLabelsTest, "dbLabelsTest");
     struct_mapping::reg(&Config::dbDataTraining, "dbDataTraining");
     struct_mapping::reg(&Config::dbLabelsTraining, "dbLabelsTraining");
+    struct_mapping::reg(&Config::MRMR, "MRMR");
     struct_mapping::reg(&Config::nTuples, "nTuples");
     struct_mapping::reg(&Config::nFeatures, "nFeatures");
     struct_mapping::reg(&Config::nClasses, "nClasses");
@@ -79,6 +80,7 @@ std::ostream& operator<<(std::ostream& os, const Config& o) {
     os << "dbLabelsTest: " << o.dbLabelsTest << std::endl;
     os << "dbDataTraining: " << o.dbDataTraining << std::endl;
     os << "dbLabelsTraining: " << o.dbLabelsTraining << std::endl;
+    os << "MRMR: " << o.MRMR << std::endl;
     os << "nTuples: " << o.nTuples << std::endl;
     os << "nFeatures: " << o.nFeatures << std::endl;
     os << "nClasses: " << o.nClasses << std::endl;

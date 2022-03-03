@@ -108,7 +108,7 @@ unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float
     // delete[] actualTupleTraining;
 }
 
-std::pair<unsigned int, unsigned int> getBestK(unsigned short minValueK, unsigned short maxValueK, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int)) {
+std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValueK, unsigned short maxValueK, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int)) {
     unsigned int bestK = 0;
     unsigned int bestNFeatures = 0;
     float bestAccuracy = 0;
@@ -116,10 +116,10 @@ std::pair<unsigned int, unsigned int> getBestK(unsigned short minValueK, unsigne
     bar.set_theme_braille();
 
     // Iterate for all features
-    for (unsigned int f = 1; f < 500; ++f) {
-        bar.progress(f, 500);
+    for (unsigned int f = 1; f < dataTest[0].data.size(); ++f) {
+        bar.progress(f, dataTest[0].data.size());
         std::vector<float> vectorAccuracies(maxValueK - minValueK + 1, 0);
-        #pragma omp parallel for
+#pragma omp parallel for schedule(dynamic)
         for (unsigned int i = 0; i < dataTest.size(); ++i) {
             std::vector<unsigned int> labelsPredicted;
             std::vector<std::pair<float, unsigned int>> distances = getDistances(dataTraining, dataTest[i], distanceFunction, f);
@@ -130,7 +130,8 @@ std::pair<unsigned int, unsigned int> getBestK(unsigned short minValueK, unsigne
                 }
             }
         }
-        // Iterate for vectorAccuracies
+// Iterate for vectorAccuracies
+#pragma omp parallel for schedule(dynamic)
         for (unsigned int i = 0; i < vectorAccuracies.size(); ++i) {
             vectorAccuracies[i] /= dataTest.size();
             if (vectorAccuracies[i] > bestAccuracy) {
@@ -158,7 +159,8 @@ std::vector<std::vector<unsigned int>> getConfusionMatrix(std::vector<unsigned i
 float euclideanDistance(Point& pointTraining, Point& pointTest, unsigned int nFeatures) {
     float distance = 0;
 
-    // #pragma omp parallel for reduction(+ : distance)
+#pragma omp parallel for simd reduction(+ \
+                                        : distance)
     for (long unsigned int i = 0; i < nFeatures; ++i) {
         distance += pow((pointTraining.data[i]) - (pointTest.data[i]), 2);
     }
@@ -166,15 +168,14 @@ float euclideanDistance(Point& pointTraining, Point& pointTest, unsigned int nFe
     return sqrt(distance);
 }
 
-float manhattanDistance(Point& pointTraining, Point& pointTest) {
+float manhattanDistance(Point& pointTraining, Point& pointTest, unsigned int nFeatures) {
     float distance = 0;
 
-    // #pragma omp parallel for reduction(+ : distance)
-    for (long unsigned int i = 0; i < pointTraining.data.size(); ++i) {
+#pragma omp parallel for simd reduction(+ \
+                                        : distance)
+    for (long unsigned int i = 0; i < nFeatures; ++i) {
         distance += abs((pointTraining.data[i]) - (pointTest.data[i]));
     }
 
     return distance;
 }
-
-// float minkowskiDistance(Point& pointTraining, Point& pointTest) {}
