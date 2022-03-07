@@ -17,11 +17,17 @@
 
 # ************ Vars ************
 CXX 		= g++
-MPICXX 		?= mpic++
+MPICXX		?= mpic++
+MPIRUN		?= mpirun
+COMPILER	:= $(if $(filter true,${mpi}),$(MPICXX),$(CXX))
+WITH_MPI	:= $(if $(filter true,${mpi}),WITHMPI,)
+EXECUTOR	:= $(if $(filter true,${mpi}),$(MPIRUN),)
+NP			:= $(if ${np},-np $(np),)
+
 # CXXFLAGS	:= -std=c++0x -Wall -Wextra -g
 CXXFLAGS	:= -std=c++17 -Wall -Wextra -g
 OPT 		:= -O2 -funroll-loops
-OMP 		= -fopenmp
+OMP 		= $(if $(filter true,${omp}),-fopenmp,)
 GPROF 		= -pg
 
 BIN		:= bin
@@ -72,9 +78,9 @@ $(FOLDERS_CREATE):
 $(OBJ)/%.o: $(SRC)/%.cpp
 	@echo "\e[33mCompiling module $< \e[0m"
 	@if [ $< = "src/main.cpp" ]; then\
-		$(CXX) $(GPROF) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $< -o $@;\
+		$(COMPILER) $(GPROF) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $< -o $@;\
 	else\
-		$(CXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $< -o $@;\
+		$(COMPILER) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $< -o $@;\
 	fi
 
 
@@ -82,7 +88,7 @@ $(OBJ)/%.o: $(SRC)/%.cpp
 
 $(OUTPUTMAIN): $(OBJECTS)
 	@echo "\n\e[33mLinking and creating executable $@ \e[0m"
-	$(CXX) $(GPROF) $(OMP) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(LFLAGS)
+	$(COMPILER) $(GPROF) $(OMP) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(LFLAGS)
 
 # ************ Documentation ************
 
@@ -113,7 +119,7 @@ clean:
 
 run: all
 	@echo "\e[0mExecuting $(OUTPUTMAIN)...\nOUTPUT:\n"
-	@./$(OUTPUTMAIN) -conf config.json
+	@$(EXECUTOR) $(NP) ./$(OUTPUTMAIN) -conf config.json
 
 info:
 	@echo "\e[36mMade by Francisco Rodríguez Jiménez (cazz@correo.ugr.es)\nHpknn (c) 2015 EFFICOMP"

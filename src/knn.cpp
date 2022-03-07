@@ -116,8 +116,8 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
     bar.set_theme_braille();
 
     // Iterate for all features
-    for (unsigned int f = 1; f < dataTest[0].data.size(); ++f) {
-        bar.progress(f, dataTest[0].data.size());
+    for (unsigned int f = 1; f < 100; ++f) {
+        bar.progress(f, 100);
         std::vector<float> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)
         for (unsigned int i = 0; i < dataTest.size(); ++i) {
@@ -159,8 +159,7 @@ std::vector<std::vector<unsigned int>> getConfusionMatrix(std::vector<unsigned i
 float euclideanDistance(Point& pointTraining, Point& pointTest, unsigned int nFeatures) {
     float distance = 0;
 
-#pragma omp parallel for simd reduction(+ \
-                                        : distance)
+    // #pragma omp parallel for simd reduction(+: distance)
     for (long unsigned int i = 0; i < nFeatures; ++i) {
         distance += pow((pointTraining.data[i]) - (pointTest.data[i]), 2);
     }
@@ -171,8 +170,7 @@ float euclideanDistance(Point& pointTraining, Point& pointTest, unsigned int nFe
 float manhattanDistance(Point& pointTraining, Point& pointTest, unsigned int nFeatures) {
     float distance = 0;
 
-#pragma omp parallel for simd reduction(+ \
-                                        : distance)
+    // #pragma omp parallel for simd reduction(+: distance)
     for (long unsigned int i = 0; i < nFeatures; ++i) {
         distance += abs((pointTraining.data[i]) - (pointTest.data[i]));
     }
