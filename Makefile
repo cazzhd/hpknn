@@ -18,16 +18,15 @@
 # ************ Vars ************
 CXX 		= g++
 MPICXX		?= mpic++
-MPIRUN		?= mpirun
+MPIEXEC		?= mpiexec --bind-to none --map-by node
 COMPILER	:= $(if $(filter true,${mpi}),$(MPICXX),$(CXX))
-WITH_MPI	:= $(if $(filter true,${mpi}),WITHMPI,)
-EXECUTOR	:= $(if $(filter true,${mpi}),$(MPIRUN),)
+# EXECUTOR	:= $(if $(filter true,${mpi}),$(MPIEXEC),)
 NP			:= $(if ${np},-np $(np),)
+NT			:= $(if ${nt},-x OMP_NUM_THREADS=$(nt),)
 
-# CXXFLAGS	:= -std=c++0x -Wall -Wextra -g
 CXXFLAGS	:= -std=c++17 -Wall -Wextra -g
 OPT 		:= -O2 -funroll-loops
-OMP 		= $(if $(filter true,${omp}),-fopenmp,)
+OMP 		= -fopenmp
 GPROF 		= -pg
 
 BIN		:= bin
@@ -78,9 +77,9 @@ $(FOLDERS_CREATE):
 $(OBJ)/%.o: $(SRC)/%.cpp
 	@echo "\e[33mCompiling module $< \e[0m"
 	@if [ $< = "src/main.cpp" ]; then\
-		$(COMPILER) $(GPROF) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $< -o $@;\
+		$(MPICXX) $(GPROF) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $< -o $@;\
 	else\
-		$(COMPILER) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $< -o $@;\
+		$(MPICXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $< -o $@;\
 	fi
 
 
@@ -88,7 +87,7 @@ $(OBJ)/%.o: $(SRC)/%.cpp
 
 $(OUTPUTMAIN): $(OBJECTS)
 	@echo "\n\e[33mLinking and creating executable $@ \e[0m"
-	$(COMPILER) $(GPROF) $(OMP) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(LFLAGS)
+	$(MPICXX) $(GPROF) $(OMP) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(LFLAGS)
 
 # ************ Documentation ************
 
@@ -118,8 +117,8 @@ clean:
 	@echo "\e[31mCleanup complete!"
 
 run: all
-	@echo "\e[0mExecuting $(OUTPUTMAIN)...\nOUTPUT:\n"
-	@$(EXECUTOR) $(NP) ./$(OUTPUTMAIN) -conf config.json
+	@echo "\e[0mExecuting $(OUTPUTMAIN)...\n$(NP) $(NT)\nOUTPUT:\n"
+	@$(MPIEXEC) $(NP) $(NT) ./$(OUTPUTMAIN) -conf config.json
 
 info:
 	@echo "\e[36mMade by Francisco Rodríguez Jiménez (cazz@correo.ugr.es)\nHpknn (c) 2015 EFFICOMP"

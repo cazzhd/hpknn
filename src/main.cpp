@@ -33,9 +33,7 @@
 #include "config.h"
 #include "db.h"
 #include "knn.h"
-#ifdef WITHMPI
 #include "mpi.h"
-#endif
 #include "omp.h"
 #include "util.h"
 
@@ -51,15 +49,6 @@ using vectorOfData = std::vector<T>;
  * @param argv Arguments of the program
  */
 int main(const int argc, const char** argv) {
-    // #ifdef WITHMPI
-    //     MPI::Init_thread(MPI_THREAD_MULTIPLE);
-    //     int rank = MPI::COMM_WORLD.Get_rank();
-    //     int size = MPI::COMM_WORLD.Get_size();
-    //     std::cout << "Rank: " << rank << " Size: " << size << std::endl;
-    //     MPI::Finalize();
-    //     exit(0);
-    // #endif
-
     Config config(argc, argv);
     // std::cout << config << std::endl;
 

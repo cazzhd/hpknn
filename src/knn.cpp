@@ -116,8 +116,8 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
     bar.set_theme_braille();
 
     // Iterate for all features
-    for (unsigned int f = 1; f < 100; ++f) {
-        bar.progress(f, 100);
+    for (unsigned int f = 1; f < 500; ++f) {
+        bar.progress(f, 500);
         std::vector<float> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)
         for (unsigned int i = 0; i < dataTest.size(); ++i) {
