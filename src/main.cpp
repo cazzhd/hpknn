@@ -57,13 +57,8 @@ int main(const int argc, const char** argv) {
     // Use normalize get the data normalized and score is little better
     vectorOfVectorData<float> dataTraining, dataTest, dataTrainingSorted, dataTestSorted;
     vectorOfData<unsigned int> labelsTraining, labelsTest, MRMR;
-#ifdef _OPENMP
     double start, end;
     start = omp_get_wtime();
-#else
-    std::chrono::steady_clock::time_point start, end;
-    start = std::chrono::steady_clock::now();
-#endif
 #pragma omp parallel sections
     {
 #pragma omp section
@@ -87,20 +82,11 @@ int main(const int argc, const char** argv) {
             MRMR = flatten(csvReader.readData<unsigned int>(config.MRMR));
         }
     }
-#ifdef _OPENMP
     end = omp_get_wtime();
     std::cout << "Time to read data: " << end - start << std::endl;
-#else
-    end = std::chrono::steady_clock::now();
-    std::cout << "Time to read data: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "[µs]" << std::endl;
-#endif
 
     // Sorting by best features (MRMR)
-#ifdef _OPENMP
     start = omp_get_wtime();
-#else
-    start = std::chrono::steady_clock::now();
-#endif
 #pragma omp parallel sections
     {
 #pragma omp section
@@ -112,22 +98,13 @@ int main(const int argc, const char** argv) {
             dataTestSorted = sorting_by_indices_vector(dataTest, MRMR);
         }
     }
-#ifdef _OPENMP
     end = omp_get_wtime();
     std::cout << "Time to sort data with MRMR: " << end - start << std::endl;
-#else
-    end = std::chrono::steady_clock::now();
-    std::cout << "Time to sort data with MRMR: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "[µs]" << std::endl;
-#endif
 
     vectorOfData<Point> dataTrainingPoints;
     vectorOfData<Point> dataTestPoints;
 
-#ifdef _OPENMP
     start = omp_get_wtime();
-#else
-    start = std::chrono::steady_clock::now();
-#endif
     dataTrainingPoints.resize(dataTrainingSorted.size());
     dataTestPoints.resize(dataTestSorted.size());
 #pragma omp parallel for
@@ -138,30 +115,16 @@ int main(const int argc, const char** argv) {
         dataTestPoints[i] = testPoint;
         // dataTrainingPoints.push_back(trainingPoint);
     }
-#ifdef _OPENMP
     end = omp_get_wtime();
     std::cout << "Time to fill vector of Point: " << end - start << std::endl;
-#else
-    end = std::chrono::steady_clock::now();
-    std::cout << "Time to fill vector of Point: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "[µs]" << std::endl;
-#endif
 
-// Get the best k value
-// floor(sqrt(config.nTuples))
-#ifdef _OPENMP
+    // Get the best k value
+    // floor(sqrt(config.nTuples))
     start = omp_get_wtime();
-#else
-    start = std::chrono::steady_clock::now();
-#endif
     std::pair<unsigned int, unsigned int> bestHyperParams = getBestHyperParams(1, config.nTuples, dataTrainingPoints, dataTestPoints, euclideanDistance);
     std::cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << std::endl;
-#ifdef _OPENMP
     end = omp_get_wtime();
     std::cout << "Time getBestHyperParams: " << end - start << std::endl;
-#else
-    end = std::chrono::steady_clock::now();
-    std::cout << "Time getBestHyperParams: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "[µs]" << std::endl;
-#endif
 
     int counterSuccessTraining = 0, counterSuccessTest = 0;
     vectorOfData<unsigned int> labelTrainingPredicted;
@@ -169,11 +132,7 @@ int main(const int argc, const char** argv) {
     labelTrainingPredicted.resize(dataTrainingPoints.size());
     labelsTestPredicted.resize(dataTestPoints.size());
 
-#ifdef _OPENMP
     start = omp_get_wtime();
-#else
-    start = std::chrono::steady_clock::now();
-#endif
 #pragma omp parallel for
     for (unsigned int i = 0; i < dataTestPoints.size(); ++i) {
         unsigned int labelPredicted = KNN(bestHyperParams.first, dataTrainingPoints, dataTestPoints[i], euclideanDistance, bestHyperParams.second);
@@ -193,13 +152,8 @@ int main(const int argc, const char** argv) {
             counterSuccessTraining++;
         }
     }
-#ifdef _OPENMP
     end = omp_get_wtime();
     std::cout << "Time KNN: " << end - start << std::endl;
-#else
-    end = std::chrono::steady_clock::now();
-    std::cout << "Time KNN: " << std::chrono::duration_cast<std::chrono::microseconds>(end - start).count() << "[µs]" << std::endl;
-#endif
 
     // Get Confusion Matrix
     vectorOfVectorData<unsigned int> confusionMatrix = getConfusionMatrix(labelsTest, labelsTestPredicted, config.nClasses);
