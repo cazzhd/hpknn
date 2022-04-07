@@ -23,7 +23,6 @@
 #include <unistd.h>
 
 #include <algorithm>
-#include <chrono>
 #include <cstring>
 #include <iomanip>
 #include <iostream>
@@ -49,74 +48,88 @@ using vectorOfData = std::vector<T>;
  * @param argv Arguments of the program
  */
 int main(const int argc, const char** argv) {
-    Config config(argc, argv);
-    // std::cout << config << std::endl;
+    int size, rank, namelen;
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
 
+    MPI::Init_thread(MPI_THREAD_MULTIPLE);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Get_processor_name(processor_name, &namelen);
+
+    Config config(argc, argv);
     CSVReader csvReader = CSVReader();
 
     // Use normalize get the data normalized and score is little better
     vectorOfVectorData<float> dataTraining, dataTest, dataTrainingSorted, dataTestSorted;
     vectorOfData<unsigned int> labelsTraining, labelsTest, MRMR;
     double start, end;
-    start = omp_get_wtime();
+    if (!rank) {
+        start = omp_get_wtime();
 #pragma omp parallel sections
-    {
-#pragma omp section
         {
-            dataTraining = csvReader.readData<float>(config.dbDataTraining);
-        }
 #pragma omp section
-        {
-            dataTest = csvReader.readData<float>(config.dbDataTest);
-        }
+            {
+                dataTraining = csvReader.readData<float>(config.dbDataTraining);
+            }
 #pragma omp section
-        {
-            labelsTraining = flatten(csvReader.readData<unsigned int>(config.dbLabelsTraining));
-        }
+            {
+                dataTest = csvReader.readData<float>(config.dbDataTest);
+            }
 #pragma omp section
-        {
-            labelsTest = flatten(csvReader.readData<unsigned int>(config.dbLabelsTest));
-        }
+            {
+                labelsTraining = flatten(csvReader.readData<unsigned int>(config.dbLabelsTraining));
+            }
 #pragma omp section
-        {
-            MRMR = flatten(csvReader.readData<unsigned int>(config.MRMR));
+            {
+                labelsTest = flatten(csvReader.readData<unsigned int>(config.dbLabelsTest));
+            }
+#pragma omp section
+            {
+                MRMR = flatten(csvReader.readData<unsigned int>(config.MRMR));
+            }
         }
+        end = omp_get_wtime();
+        std::cout << "Time to read data: " << end - start << std::endl;
     }
-    end = omp_get_wtime();
-    std::cout << "Time to read data: " << end - start << std::endl;
 
     // Sorting by best features (MRMR)
-    start = omp_get_wtime();
+    if (!rank) {
+        start = omp_get_wtime();
 #pragma omp parallel sections
-    {
-#pragma omp section
         {
-            dataTrainingSorted = sorting_by_indices_vector(dataTraining, MRMR);
-        }
 #pragma omp section
-        {
-            dataTestSorted = sorting_by_indices_vector(dataTest, MRMR);
+            {
+                dataTrainingSorted = sorting_by_indices_vector(dataTraining, MRMR);
+            }
+#pragma omp section
+            {
+                dataTestSorted = sorting_by_indices_vector(dataTest, MRMR);
+            }
         }
+        end = omp_get_wtime();
+        std::cout << "Time to sort data with MRMR: " << end - start << std::endl;
     }
-    end = omp_get_wtime();
-    std::cout << "Time to sort data with MRMR: " << end - start << std::endl;
 
     vectorOfData<Point> dataTrainingPoints;
     vectorOfData<Point> dataTestPoints;
 
-    start = omp_get_wtime();
-    dataTrainingPoints.resize(dataTrainingSorted.size());
-    dataTestPoints.resize(dataTestSorted.size());
+    if (!rank) {
+        start = omp_get_wtime();
+        dataTrainingPoints.resize(dataTrainingSorted.size());
+        dataTestPoints.resize(dataTestSorted.size());
 #pragma omp parallel for
-    for (unsigned int i = 0; i < dataTrainingSorted.size(); ++i) {
-        Point trainingPoint(dataTrainingSorted[i], labelsTraining[i]);
-        Point testPoint(dataTestSorted[i], labelsTest[i]);
-        dataTrainingPoints[i] = trainingPoint;
-        dataTestPoints[i] = testPoint;
-        // dataTrainingPoints.push_back(trainingPoint);
+        for (unsigned int i = 0; i < dataTrainingSorted.size(); ++i) {
+            Point trainingPoint(dataTrainingSorted[i], labelsTraining[i]);
+            Point testPoint(dataTestSorted[i], labelsTest[i]);
+            dataTrainingPoints[i] = trainingPoint;
+            dataTestPoints[i] = testPoint;
+            // dataTrainingPoints.push_back(trainingPoint);
+        }
+        end = omp_get_wtime();
+        std::cout << "Time to fill vector of Point: " << end - start << std::endl;
     }
-    end = omp_get_wtime();
-    std::cout << "Time to fill vector of Point: " << end - start << std::endl;
+
+    // In this point, need to create a local training and test vector of point to use function MPI_Scatter, or all processor know vars and the processors process her own data vectors
 
     // Get the best k value
     // floor(sqrt(config.nTuples))
@@ -169,26 +182,6 @@ int main(const int argc, const char** argv) {
     std::cout << "Accuracy of K-NN classifier on training set: " << ((float)counterSuccessTraining / (float)dataTrainingPoints.size()) << std::endl;
     std::cout << "Accuracy of K-NN classifier on test set: " << ((float)counterSuccessTest / (float)dataTestPoints.size()) << std::endl;
 
-    // Make with dinamic memory
-    // float* dataTest = csvReader.readData(config.dbDataTest.c_str());
-    // float* labelsTest = csvReader.readData(config.dbLabelsTest.c_str());
-    // float* dataTraining = csvReader.readData(config.dbDataTraining.c_str());
-    // float* labelTraining = csvReader.readData(config.dbLabelsTraining.c_str());
-
-    // Process dataTraining to create Point objects
-    // Point* pointsTraining = new Point[config.nTuples];
-    // float* tmpTupleTraining;
-    // for (int i = 0; i < config.nTuples; ++i) {
-    //     tmpTupleTraining = new float[config.nFeatures];
-    //     memcpy(tmpTupleTraining, dataTraining + i * config.nFeatures, config.nFeatures * sizeof(float));
-    //     pointsTraining[i] = Point(*tmpTupleTraining, 0, labelTraining[i], config);
-    // }
-    // delete[] tmpTupleTraining;
-
-    // delete[] dataTest;
-    // delete[] labelsTest;
-    // delete[] dataTraining;
-    // delete[] labelTraining;
-
+    MPI_Finalize();
     return EXIT_SUCCESS;
 }

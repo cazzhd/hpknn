@@ -19,6 +19,7 @@
 /********************************* Includes *******************************/
 #include "config.h"
 
+#include <mpi.h>
 #include <stdarg.h>
 
 #include <cstdarg>
@@ -49,7 +50,10 @@ Config::Config(const int argc, const char** argv) {
 
     /************ Check important parameters ***********/
     if (parser.isSet("-h")) {
-        parser.printHelp();
+        if (!MPI::COMM_WORLD.Get_rank()) {
+            parser.printHelp();
+        }
+        MPI::Finalize();
         exit(EXIT_SUCCESS);
     }
 
@@ -84,7 +88,6 @@ std::ostream& operator<<(std::ostream& os, const Config& o) {
     os << "nTuples: " << o.nTuples << std::endl;
     os << "nFeatures: " << o.nFeatures << std::endl;
     os << "nClasses: " << o.nClasses << std::endl;
-
     return os;
 }
 
@@ -92,10 +95,10 @@ void check(const bool cond, const char* const format, ...) {
     if (cond) {
         va_list args;
         va_start(args, format);
-        // fprintf(stderr, "Process %d: ", MPI::COMM_WORLD.Get_rank());
+        fprintf(stderr, "Process %d: ", MPI::COMM_WORLD.Get_rank());
         vfprintf(stderr, format, args);
         va_end(args);
-        // MPI::COMM_WORLD.Abort(-1);
+        MPI::COMM_WORLD.Abort(-1);
         exit(EXIT_FAILURE);
     }
 }
