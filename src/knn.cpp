@@ -156,6 +156,24 @@ std::vector<std::vector<unsigned int>> getConfusionMatrix(std::vector<unsigned i
     return confusionMatrix;
 }
 
+std::pair<std::vector<unsigned int>, unsigned int> getScoreKNN(int k, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int), unsigned int nFeatures) {
+    unsigned int counterSuccess = 0;
+    std::vector<unsigned int> labelsPredicted;
+    labelsPredicted.resize(dataTraining.size());
+
+#pragma omp parallel for
+    for (unsigned int i = 0; i < dataTest.size(); ++i) {
+        unsigned int labelPredicted = KNN(k, dataTraining, dataTest[i], euclideanDistance, nFeatures);
+        labelsPredicted[i] = labelPredicted;
+        if (labelPredicted == dataTest[i].label) {
+#pragma omp atomic
+            counterSuccess++;
+        }
+    }
+
+    return std::make_pair(labelsPredicted, counterSuccess);
+}
+
 float euclideanDistance(Point& pointTraining, Point& pointTest, unsigned int nFeatures) {
     float distance = 0;
 

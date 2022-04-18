@@ -109,6 +109,18 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
 std::vector<std::vector<unsigned int>> getConfusionMatrix(std::vector<unsigned int>& labels, std::vector<unsigned int>& labelsPredicted, unsigned int nClasses);
 
 /**
+ * @brief Get the Score from KNN
+ *
+ * @param k The number of neighbors to find
+ * @param dataTraining The training data
+ * @param dataTest The Point to find the nearest neighbors
+ * @param distanceFunction The distance function to use
+ * @param nFeatures The number of features to use in the distance function
+ * @return std::pair<std::vector<unsigned int>, unsigned int> that contains the labels predicted and the counter of correct predictions
+ */
+std::pair<std::vector<unsigned int>, unsigned int> getScoreKNN(int k, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int), unsigned int nFeatures);
+
+/**
  * @brief Get the Euclidean Distance object
  * @param pointTraining The training data
  * @param pointTest The test data

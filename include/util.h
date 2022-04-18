@@ -84,4 +84,14 @@ std::vector<T> sorting_by_indices_vector(const std::vector<T> &original, const s
     return sorted;
 }
 
+template <typename T>
+void printMatrix(const std::vector<std::vector<T>> &matrix) {
+    for (const auto &row : matrix) {
+        for (const auto &value : row) {
+            std::cout << value << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
 #endif

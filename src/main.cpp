@@ -35,11 +35,99 @@
 #include "mpi.h"
 #include "omp.h"
 #include "util.h"
-
 template <typename T>
 using vectorOfVectorData = std::vector<std::vector<T>>;
 template <typename T>
 using vectorOfData = std::vector<T>;
+
+/**
+ * @brief Function that read de data from files of config and fill vectors, if use function normalize get best scores
+ * @param dataTraining vector of data training
+ * @param dataTest vector of data test
+ * @param labelsTraining vector of labels training
+ * @param labelsTest vector of labels test
+ * @param MRMR vector of MRMR
+ * @param config configuration of program
+ */
+void readDataFromFiles(vectorOfVectorData<float>& dataTraining,
+                       vectorOfVectorData<float>& dataTest,
+                       vectorOfData<unsigned int>& labelsTraining,
+                       vectorOfData<unsigned int>& labelsTest,
+                       vectorOfData<unsigned int>& MRMR,
+                       Config& config) {
+    CSVReader csvReader = CSVReader();
+
+#pragma omp parallel sections
+    {
+#pragma omp section
+        {
+            dataTraining = csvReader.readData<float>(config.dbDataTraining);
+        }
+#pragma omp section
+        {
+            dataTest = csvReader.readData<float>(config.dbDataTest);
+        }
+#pragma omp section
+        {
+            labelsTraining = flatten(csvReader.readData<unsigned int>(config.dbLabelsTraining));
+        }
+#pragma omp section
+        {
+            labelsTest = flatten(csvReader.readData<unsigned int>(config.dbLabelsTest));
+        }
+#pragma omp section
+        {
+            MRMR = flatten(csvReader.readData<unsigned int>(config.MRMR));
+        }
+    }
+}
+
+/**
+ * @brief sort dataTraining and dataTest by MRMR vector
+ * @param dataTraining vector of data training
+ * @param dataTest vector of data test
+ * @param MRMR vector of MRMR
+ */
+void sortDataByMRMR(vectorOfVectorData<float>& dataTraining, vectorOfVectorData<float>& dataTest, const vectorOfData<unsigned int>& MRMR) {
+#pragma omp parallel sections
+    {
+#pragma omp section
+        {
+            dataTraining = sorting_by_indices_vector(dataTraining, MRMR);
+        }
+#pragma omp section
+        {
+            dataTest = sorting_by_indices_vector(dataTest, MRMR);
+        }
+    }
+}
+
+/**
+ * @brief Create a Vector Of Points object, best structure for my implementation of KNN
+ * @param dataTrainingPoints vector of points training to fill
+ * @param dataTestPoints vector of points test to fill
+ * @param dataTraining vector of data training
+ * @param dataTest vector of data test
+ * @param labelsTraining vector of labels training
+ * @param labelsTest vector of labels test
+ */
+void createVectorOfPoints(vectorOfData<Point>& dataTrainingPoints,
+                          vectorOfData<Point>& dataTestPoints,
+                          const vectorOfVectorData<float>& dataTraining,
+                          const vectorOfVectorData<float>& dataTest,
+                          const vectorOfData<unsigned int>& labelsTraining,
+                          const vectorOfData<unsigned int>& labelsTest) {
+    dataTrainingPoints.resize(dataTraining.size());
+    dataTestPoints.resize(dataTest.size());
+
+#pragma omp parallel for
+    for (unsigned int i = 0; i < dataTraining.size(); ++i) {
+        Point trainingPoint(dataTraining[i], labelsTraining[i]);
+        Point testPoint(dataTest[i], labelsTest[i]);
+        dataTrainingPoints[i] = trainingPoint;
+        dataTestPoints[i] = testPoint;
+    }
+}
 
 /********************************* Main ********************************/
 /**
@@ -57,130 +145,61 @@ int main(const int argc, const char** argv) {
     MPI_Get_processor_name(processor_name, &namelen);
 
     Config config(argc, argv);
-    CSVReader csvReader = CSVReader();
 
-    // Use normalize get the data normalized and score is little better
-    vectorOfVectorData<float> dataTraining, dataTest, dataTrainingSorted, dataTestSorted;
+    // 1. Read data from files
+    vectorOfVectorData<float> dataTraining, dataTest;
     vectorOfData<unsigned int> labelsTraining, labelsTest, MRMR;
     double start, end;
     if (!rank) {
         start = omp_get_wtime();
-#pragma omp parallel sections
-        {
-#pragma omp section
-            {
-                dataTraining = csvReader.readData<float>(config.dbDataTraining);
-            }
-#pragma omp section
-            {
-                dataTest = csvReader.readData<float>(config.dbDataTest);
-            }
-#pragma omp section
-            {
-                labelsTraining = flatten(csvReader.readData<unsigned int>(config.dbLabelsTraining));
-            }
-#pragma omp section
-            {
-                labelsTest = flatten(csvReader.readData<unsigned int>(config.dbLabelsTest));
-            }
-#pragma omp section
-            {
-                MRMR = flatten(csvReader.readData<unsigned int>(config.MRMR));
-            }
-        }
+        readDataFromFiles(dataTraining, dataTest, labelsTraining, labelsTest, MRMR, config);
         end = omp_get_wtime();
         std::cout << "Time to read data: " << end - start << std::endl;
     }
 
-    // Sorting by best features (MRMR)
+    // 2. Sorting by best features (MRMR), get best scores
     if (!rank) {
         start = omp_get_wtime();
-#pragma omp parallel sections
-        {
-#pragma omp section
-            {
-                dataTrainingSorted = sorting_by_indices_vector(dataTraining, MRMR);
-            }
-#pragma omp section
-            {
-                dataTestSorted = sorting_by_indices_vector(dataTest, MRMR);
-            }
-        }
+        sortDataByMRMR(dataTraining, dataTest, MRMR);
         end = omp_get_wtime();
         std::cout << "Time to sort data with MRMR: " << end - start << std::endl;
     }
 
-    vectorOfData<Point> dataTrainingPoints;
-    vectorOfData<Point> dataTestPoints;
-
+    // 3. Fill vectors of Point
+    vectorOfData<Point> dataTrainingPoints, dataTestPoints;
     if (!rank) {
         start = omp_get_wtime();
-        dataTrainingPoints.resize(dataTrainingSorted.size());
-        dataTestPoints.resize(dataTestSorted.size());
-#pragma omp parallel for
-        for (unsigned int i = 0; i < dataTrainingSorted.size(); ++i) {
-            Point trainingPoint(dataTrainingSorted[i], labelsTraining[i]);
-            Point testPoint(dataTestSorted[i], labelsTest[i]);
-            dataTrainingPoints[i] = trainingPoint;
-            dataTestPoints[i] = testPoint;
-            // dataTrainingPoints.push_back(trainingPoint);
-        }
+        createVectorOfPoints(dataTrainingPoints, dataTestPoints, dataTraining, dataTest, labelsTraining, labelsTest);
         end = omp_get_wtime();
         std::cout << "Time to fill vector of Point: " << end - start << std::endl;
     }
 
-    // In this point, need to create a local training and test vector of point to use function MPI_Scatter, or all processor know vars and the processors process her own data vectors
-
-    // Get the best k value
-    // floor(sqrt(config.nTuples))
+    // 4. Get the best k and number of features to use
+    // floor(sqrt(config.nTuples)) // Recommended
     start = omp_get_wtime();
     std::pair<unsigned int, unsigned int> bestHyperParams = getBestHyperParams(1, config.nTuples, dataTrainingPoints, dataTestPoints, euclideanDistance);
-    std::cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << std::endl;
     end = omp_get_wtime();
+    std::cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << std::endl;
     std::cout << "Time getBestHyperParams: " << end - start << std::endl;
 
-    int counterSuccessTraining = 0, counterSuccessTest = 0;
-    vectorOfData<unsigned int> labelTrainingPredicted;
-    vectorOfData<unsigned int> labelsTestPredicted;
-    labelTrainingPredicted.resize(dataTrainingPoints.size());
-    labelsTestPredicted.resize(dataTestPoints.size());
-
+    // 5. To finalize get the score of the best k and number of features
     start = omp_get_wtime();
-#pragma omp parallel for
-    for (unsigned int i = 0; i < dataTestPoints.size(); ++i) {
-        unsigned int labelPredicted = KNN(bestHyperParams.first, dataTrainingPoints, dataTestPoints[i], euclideanDistance, bestHyperParams.second);
-        labelsTestPredicted[i] = labelPredicted;
-        if (labelPredicted == dataTestPoints[i].label) {
-#pragma omp atomic
-            counterSuccessTest++;
-        }
-    }
-
-#pragma omp parallel for
-    for (unsigned int i = 0; i < dataTrainingPoints.size(); ++i) {
-        unsigned int labelPredicted = KNN(bestHyperParams.first, dataTrainingPoints, dataTrainingPoints[i], euclideanDistance, bestHyperParams.second);
-        labelTrainingPredicted[i] = labelPredicted;
-        if (labelPredicted == dataTrainingPoints[i].label) {
-#pragma omp atomic
-            counterSuccessTraining++;
-        }
-    }
+    std::pair<vectorOfData<unsigned int>, unsigned int> scoreTest = getScoreKNN(bestHyperParams.first, dataTrainingPoints, dataTestPoints, euclideanDistance, bestHyperParams.second);
+    std::pair<vectorOfData<unsigned int>, unsigned int> scoreTraining = getScoreKNN(bestHyperParams.first, dataTrainingPoints, dataTrainingPoints, euclideanDistance, bestHyperParams.second);
     end = omp_get_wtime();
     std::cout << "Time KNN: " << end - start << std::endl;
 
-    // Get Confusion Matrix
-    vectorOfVectorData<unsigned int> confusionMatrix = getConfusionMatrix(labelsTest, labelsTestPredicted, config.nClasses);
-    // Print Confusion Matrix
+    // 6. Get Confusion Matrix for test
+    vectorOfVectorData<unsigned int> confusionMatrixTest = getConfusionMatrix(labelsTest, scoreTest.first, config.nClasses);
     std::cout << "Confusion Matrix Test: " << std::endl;
-    for (unsigned int i = 0; i < confusionMatrix.size(); ++i) {
-        for (unsigned int j = 0; j < confusionMatrix[i].size(); ++j) {
-            std::cout << confusionMatrix[i][j] << " ";
-        }
-        std::cout << std::endl;
-    }
+    printMatrix(confusionMatrixTest);
 
-    std::cout << "Accuracy of K-NN classifier on training set: " << ((float)counterSuccessTraining / (float)dataTrainingPoints.size()) << std::endl;
-    std::cout << "Accuracy of K-NN classifier on test set: " << ((float)counterSuccessTest / (float)dataTestPoints.size()) << std::endl;
+    // vectorOfVectorData<unsigned int> confusionMatrixTraining = getConfusionMatrix(labelsTraining, scoreTraining.first, config.nClasses);
+    // std::cout << "Confusion Matrix Training: " << std::endl;
+    // printMatrix(confusionMatrixTraining);
+
+    std::cout << "Accuracy of K-NN classifier on training set: " << ((float)scoreTraining.second / (float)dataTrainingPoints.size()) << std::endl;
+    std::cout << "Accuracy of K-NN classifier on test set: " << ((float)scoreTest.second / (float)dataTestPoints.size()) << std::endl;
 
     MPI_Finalize();
     return EXIT_SUCCESS;
