@@ -88,7 +88,7 @@ void readDataFromFiles(vectorOfVectorData<float>& dataTraining,
  * @param dataTest vector of data test
  * @param MRMR vector of MRMR
  */
-void sortDataByMRMR(vectorOfVectorData<float>& dataTraining, vectorOfVectorData<float>& dataTest, const vectorOfData<unsigned int>& MRMR) {
+void sortFeaturesByMRMR(vectorOfVectorData<float>& dataTraining, vectorOfVectorData<float>& dataTest, const vectorOfData<unsigned int>& MRMR) {
 #pragma omp parallel sections
     {
 #pragma omp section
@@ -160,7 +160,7 @@ int main(const int argc, const char** argv) {
     // 2. Sorting by best features (MRMR), get best scores
     if (!rank) {
         start = omp_get_wtime();
-        sortDataByMRMR(dataTraining, dataTest, MRMR);
+        sortFeaturesByMRMR(dataTraining, dataTest, MRMR);
         end = omp_get_wtime();
         std::cout << "Time to sort data with MRMR: " << end - start << std::endl;
     }
@@ -173,6 +173,8 @@ int main(const int argc, const char** argv) {
         end = omp_get_wtime();
         std::cout << "Time to fill vector of Point: " << end - start << std::endl;
     }
+
+    // Recomendación propagar los vectores de puntos
 
     // 4. Get the best k and number of features to use
     // floor(sqrt(config.nTuples)) // Recommended

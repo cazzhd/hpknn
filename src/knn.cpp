@@ -116,12 +116,11 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
     bar.set_theme_braille();
 
     // Iterate for all features
-    for (unsigned int f = 1; f < 500; ++f) {
-        bar.progress(f, 500);
+    for (unsigned int f = 1; f < dataTraining[0].data.size(); ++f) {
+        bar.progress(f, dataTraining[0].data.size());
         std::vector<float> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)
         for (unsigned int i = 0; i < dataTest.size(); ++i) {
-            std::vector<unsigned int> labelsPredicted;
             std::vector<std::pair<float, unsigned int>> distances = getDistances(dataTraining, dataTest[i], distanceFunction, f);
             for (unsigned int k = minValueK; k <= maxValueK; ++k) {
                 unsigned int labelPredicted = getMostFrequentClass(k, distances);
@@ -163,7 +162,7 @@ std::pair<std::vector<unsigned int>, unsigned int> getScoreKNN(int k, std::vecto
 
 #pragma omp parallel for
     for (unsigned int i = 0; i < dataTest.size(); ++i) {
-        unsigned int labelPredicted = KNN(k, dataTraining, dataTest[i], euclideanDistance, nFeatures);
+        unsigned int labelPredicted = KNN(k, dataTraining, dataTest[i], distanceFunction, nFeatures);
         labelsPredicted[i] = labelPredicted;
         if (labelPredicted == dataTest[i].label) {
 #pragma omp atomic
