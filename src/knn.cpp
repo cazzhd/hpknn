@@ -33,12 +33,16 @@
 Point::Point() : label(-1) {}
 
 Point::Point(std::vector<float> data, unsigned int label) {
-    this->data = data;
+    // this->data = data;
     this->label = label;
+#pragma omp critical
+    {
+        std::copy(data.begin(), data.end(), this->data);
+    }
 }
 
 Point::~Point() {
-    this->data.clear();
+    // this->data.clear();
 }
 
 std::ostream& operator<<(std::ostream& os, const Point& o) {
@@ -116,8 +120,9 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
     bar.set_theme_braille();
 
     // Iterate for all features
-    for (unsigned int f = 1; f < dataTraining[0].data.size(); ++f) {
-        bar.progress(f, dataTraining[0].data.size());
+    unsigned int nFeatures = sizeof(dataTraining[0].data) / sizeof(dataTraining[0].data[0]);
+    for (unsigned int f = 1; f < nFeatures; ++f) {
+        bar.progress(f, nFeatures);
         std::vector<float> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)
         for (unsigned int i = 0; i < dataTest.size(); ++i) {

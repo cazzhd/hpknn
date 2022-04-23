@@ -19,6 +19,8 @@
 #ifndef KNN_H
 #define KNN_H
 
+#define LENGTH_FEATURES 3600
+
 /********************************* Includes *******************************/
 #include <fstream>
 #include <map>
@@ -30,8 +32,9 @@
 
 /********************************* Methods ********************************/
 struct Point {
-    std::vector<float> data;  //!< Pointer to the data of the point
-    unsigned int label;       //!< Label of the point
+    unsigned int label;               //!< Label of the point
+    // std::vector<float> data;          //!< Pointer to the data of the point
+    float data[LENGTH_FEATURES];  //!< Data of tuple data
 
     /**
      * @brief Default Construct a new Point object
