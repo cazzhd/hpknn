@@ -27,17 +27,19 @@
 #include "omp.h"
 #include "tqdm.h"
 
+using namespace std;
+
 /******************************** Constants *******************************/
 
 /********************************* Methods ********************************/
 Point::Point() : label(-1) {}
 
-Point::Point(std::vector<float> data, unsigned int label) {
+Point::Point(vector<float> data, unsigned int label) {
     // this->data = data;
     this->label = label;
 #pragma omp critical
     {
-        std::copy(data.begin(), data.end(), this->data);
+        copy(data.begin(), data.end(), this->data);
     }
 }
 
@@ -45,18 +47,23 @@ Point::~Point() {
     // this->data.clear();
 }
 
-std::ostream& operator<<(std::ostream& os, const Point& o) {
-    os << "data: " << o.data[0] << std::endl;
-    os << "label: " << o.label << std::endl;
+ostream& operator<<(ostream& os, const Point& o) {
+    os << "data: " << o.data[0] << endl;
+    os << "label: " << o.label << endl;
 
     return os;
 }
 
-std::vector<std::pair<float, unsigned int>> getDistances(std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int), unsigned int nFeatures) {
-    std::vector<std::pair<float, unsigned int>> distances;
+vector<pair<float, unsigned int>> getDistances(vector<float>& dataTraining,
+                                               vector<float>& dataTestTuple,
+                                               vector<unsigned int> labelsTraining,
+                                               float (*distanceFunction)(std::vector<float>&, std::vector<float>&, unsigned int),
+                                               unsigned int nFeatures) {
+    vector<pair<float, unsigned int>> distances;
 
-    for (size_t i = 0; i < dataTraining.size(); ++i) {
-        distances.push_back(std::make_pair(distanceFunction(dataTraining[i], dataTest, nFeatures), dataTraining[i].label));
+    for (size_t i = 0; i < dataTestTuple.size(); ++i) {
+        vector<float> dataTrainingTuple(dataTraining.begin() + i * nFeatures, dataTraining.begin() + (i + 1) * nFeatures);
+        distances.push_back(make_pair(distanceFunction(dataTrainingTuple, dataTestTuple, nFeatures), labelsTraining[i]));
         // dataTraining[i].distance = distanceFunction(dataTraining[i], dataTest, nFeatures);
     }
 
@@ -64,15 +71,15 @@ std::vector<std::pair<float, unsigned int>> getDistances(std::vector<Point>& dat
     //     return a.first < b.distance;
     // });
 
-    std::sort(distances.begin(), distances.end(), [](const std::pair<float, unsigned int>& a, const std::pair<float, unsigned int>& b) {
+    sort(distances.begin(), distances.end(), [](const pair<float, unsigned int>& a, const pair<float, unsigned int>& b) {
         return a.first < b.first;
     });
 
     return distances;
 }
 
-unsigned int getMostFrequentClass(int k, std::vector<std::pair<float, unsigned int>>& distances) {
-    std::map<unsigned int, int, std::greater<int>> counters;
+unsigned int getMostFrequentClass(int k, vector<pair<float, unsigned int>>& distances) {
+    map<unsigned int, int, greater<int>> counters;
     for (auto it = distances.begin(); it != distances.begin() + k; ++it) {
         counters[it->second]++;
     }
@@ -80,16 +87,16 @@ unsigned int getMostFrequentClass(int k, std::vector<std::pair<float, unsigned i
     return counters.begin()->first;
 }
 
-unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int), unsigned int nFeatures) {
-    std::vector<std::pair<float, unsigned int>> distances = getDistances(dataTraining, dataTest, distanceFunction, nFeatures);
+unsigned int KNN(int k, vector<float>& dataTraining, vector<float>& dataTest, vector<unsigned int>& labelsTraining, float (*distanceFunction)(vector<float>&, vector<float>&, unsigned int), unsigned int nFeatures) {
+    vector<pair<float, unsigned int>> distances = getDistances(dataTraining, dataTest, labelsTraining, distanceFunction, nFeatures);
     return getMostFrequentClass(k, distances);
 
-    // std::cout << counters.begin()->first << std::endl;
-    // std::cout << dataTest.label << std::endl;
-    // std::cout << ((counters.begin()->first == dataTest.label) ? "True" : "False") << std::endl;
+    // cout << counters.begin()->first << endl;
+    // cout << dataTest.label << endl;
+    // cout << ((counters.begin()->first == dataTest.label) ? "True" : "False") << endl;
 
     // for (auto counter : counters) {
-    //     std::cout << counter.first << ": " << counter.second << std::endl;
+    //     cout << counter.first << ": " << counter.second << endl;
     // }
 
     // float* actualTupleTest = new float[config.nFeatures];
@@ -100,11 +107,11 @@ unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float
     //     float* vectorDistances = new float[config.nTuples];
     //     for (int j = 0; j < config.nTuples; ++j) {
     //         memcpy(actualTupleTraining, &dataTraining + j * config.nFeatures, config.nFeatures * sizeof(float));
-    //         std::cout << actualTupleTraining << std::endl;
+    //         cout << actualTupleTraining << endl;
     //         float distance = distanceFunction(*actualTupleTraining, *actualTupleTest, config);
     //         vectorDistances[j] = distance;
     //     }
-    //     std::sort(vectorDistances, vectorDistances + config.nTuples);
+    //     sort(vectorDistances, vectorDistances + config.nTuples);
     //     delete[] vectorDistances;
     // }
 
@@ -112,7 +119,14 @@ unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float
     // delete[] actualTupleTraining;
 }
 
-std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValueK, unsigned short maxValueK, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int)) {
+pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValueK,
+                                                    unsigned short maxValueK,
+                                                    vector<float>& dataTraining,
+                                                    vector<float>& dataTest,
+                                                    vector<unsigned int>& labelsTraining,
+                                                    vector<unsigned int>& labelsTest,
+                                                    float (*distanceFunction)(vector<float>&, vector<float>&, unsigned int),
+                                                    const Config& config) {
     unsigned int bestK = 0;
     unsigned int bestNFeatures = 0;
     float bestAccuracy = 0;
@@ -120,16 +134,17 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
     bar.set_theme_braille();
 
     // Iterate for all features
-    unsigned int nFeatures = sizeof(dataTraining[0].data) / sizeof(dataTraining[0].data[0]);
-    for (unsigned int f = 1; f < nFeatures; ++f) {
-        bar.progress(f, nFeatures);
-        std::vector<float> vectorAccuracies(maxValueK - minValueK + 1, 0);
+    for (unsigned int f = 1; f < config.nFeatures; ++f) {
+        bar.progress(f, config.nFeatures);
+        vector<float> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)
-        for (unsigned int i = 0; i < dataTest.size(); ++i) {
-            std::vector<std::pair<float, unsigned int>> distances = getDistances(dataTraining, dataTest[i], distanceFunction, f);
+        for (unsigned int i = 0; i < config.nTuples; ++i) {
+            // Creando nuevos vectores tarda la vida, tengo que pasar referencia y recorrerlo linealmente segun proceda
+            vector<float> dataTestTuple(dataTest.begin() + i * config.nFeatures, dataTest.begin() + (i + 1) * config.nFeatures);
+            vector<pair<float, unsigned int>> distances = getDistances(dataTraining, dataTestTuple, labelsTraining, distanceFunction, f);
             for (unsigned int k = minValueK; k <= maxValueK; ++k) {
                 unsigned int labelPredicted = getMostFrequentClass(k, distances);
-                if (labelPredicted == dataTest[i].label) {
+                if (labelPredicted == labelsTest[i]) {
                     vectorAccuracies[k - minValueK]++;
                 }
             }
@@ -147,11 +162,11 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
     }
 
     bar.finish();
-    return std::make_pair(bestK, bestNFeatures);
+    return make_pair(bestK, bestNFeatures);
 }
 
-std::vector<std::vector<unsigned int>> getConfusionMatrix(std::vector<unsigned int>& labels, std::vector<unsigned int>& labelsPredicted, unsigned int nClasses) {
-    std::vector<std::vector<unsigned int>> confusionMatrix(nClasses, std::vector<unsigned int>(nClasses));
+vector<vector<unsigned int>> getConfusionMatrix(vector<unsigned int>& labels, vector<unsigned int>& labelsPredicted, unsigned int nClasses) {
+    vector<vector<unsigned int>> confusionMatrix(nClasses, vector<unsigned int>(nClasses));
 
     for (unsigned int i = 0; i < labels.size(); ++i) {
         confusionMatrix[labels[i]][labelsPredicted[i]]++;
@@ -160,41 +175,49 @@ std::vector<std::vector<unsigned int>> getConfusionMatrix(std::vector<unsigned i
     return confusionMatrix;
 }
 
-std::pair<std::vector<unsigned int>, unsigned int> getScoreKNN(int k, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int), unsigned int nFeatures) {
+pair<vector<unsigned int>, unsigned int> getScoreKNN(int k,
+                                                     vector<float>& dataTraining,
+                                                     vector<float>& dataTest,
+                                                     vector<unsigned int>& labelsTraining,
+                                                     vector<unsigned int>& labelsTest,
+                                                     float (*distanceFunction)(vector<float>&, vector<float>&, unsigned int),
+                                                     unsigned int nFeatures,
+                                                     const Config& config) {
     unsigned int counterSuccess = 0;
-    std::vector<unsigned int> labelsPredicted;
+    vector<unsigned int> labelsPredicted;
     labelsPredicted.resize(dataTraining.size());
 
 #pragma omp parallel for
-    for (unsigned int i = 0; i < dataTest.size(); ++i) {
-        unsigned int labelPredicted = KNN(k, dataTraining, dataTest[i], distanceFunction, nFeatures);
+    for (unsigned int i = 0; i < config.nTuples; ++i) {
+        vector<float> dataTestTuple(dataTest.begin() + i * config.nFeatures, dataTest.begin() + (i + 1) * config.nFeatures);
+        unsigned int labelPredicted = KNN(k, dataTraining, dataTestTuple, labelsTraining, distanceFunction, nFeatures);
         labelsPredicted[i] = labelPredicted;
-        if (labelPredicted == dataTest[i].label) {
+        if (labelPredicted == labelsTest[i]) {
 #pragma omp atomic
             counterSuccess++;
         }
     }
 
-    return std::make_pair(labelsPredicted, counterSuccess);
+    return make_pair(labelsPredicted, counterSuccess);
 }
 
-float euclideanDistance(Point& pointTraining, Point& pointTest, unsigned int nFeatures) {
+float euclideanDistance(vector<float>& pointTraining, vector<float>& pointTest, unsigned int nFeatures) {
     float distance = 0;
 
     // #pragma omp parallel for simd reduction(+: distance)
     for (long unsigned int i = 0; i < nFeatures; ++i) {
-        distance += pow((pointTraining.data[i]) - (pointTest.data[i]), 2);
+        distance += pow((pointTraining[i]) - (pointTest[i]), 2);
     }
 
     return sqrt(distance);
 }
 
-float manhattanDistance(Point& pointTraining, Point& pointTest, unsigned int nFeatures) {
+float manhattanDistance(vector<float>& pointTraining, vector<float>& pointTest, unsigned int nFeatures) {
     float distance = 0;
 
     // #pragma omp parallel for simd reduction(+: distance)
     for (long unsigned int i = 0; i < nFeatures; ++i) {
-        distance += abs((pointTraining.data[i]) - (pointTest.data[i]));
+        distance += abs((pointTraining[i]) - (pointTest[i]));
     }
 
     return distance;

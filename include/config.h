@@ -37,9 +37,9 @@ typedef struct Config {
     std::string dbDataTraining;   /**< Filename of the dataset to train */
     std::string dbLabelsTraining; /**< Filename of the dataset labels to train */
     std::string MRMR;             /**< Filename of the MRMR file */
-    int nTuples;                  /**< Number of tuples of the dataset */
-    int nFeatures;                /**< Number of features of the dataset */
-    int nClasses;                 /**< Number of classes of the dataset */
+    unsigned int nTuples;         /**< Number of tuples of the dataset */
+    unsigned int nFeatures;       /**< Number of features of the dataset */
+    unsigned int nClasses;        /**< Number of classes of the dataset */
 
     /********************************* Methods ********************************/
     /**

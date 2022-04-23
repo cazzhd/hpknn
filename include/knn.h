@@ -32,9 +32,9 @@
 
 /********************************* Methods ********************************/
 struct Point {
-    unsigned int label;               //!< Label of the point
-    // std::vector<float> data;          //!< Pointer to the data of the point
+    unsigned int label;           //!< Label of the point
     float data[LENGTH_FEATURES];  //!< Data of tuple data
+    // std::vector<float> data;          //!< Pointer to the data of the point
 
     /**
      * @brief Default Construct a new Point object
@@ -70,7 +70,11 @@ struct Point {
  * @param nFeatures The number of features to use in the distance function
  * @return vectors of pairs with distance and label
  */
-std::vector<std::pair<float, unsigned int>> getDistances(std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int), unsigned int nFeatures);
+std::vector<std::pair<float, unsigned int>> getDistances(std::vector<float>& dataTraining,
+                                                         std::vector<float>& dataTest,
+                                                         std::vector<unsigned int> labelsTraining,
+                                                         float (*distanceFunction)(std::vector<float>&, std::vector<float>&, unsigned int),
+                                                         unsigned int nFeatures);
 
 /**
  * @brief Create a map with
@@ -89,7 +93,7 @@ unsigned int getMostFrequentClass(int k, std::vector<std::pair<float, unsigned i
  * @param nFeatures The number of features to use in the distance function
  * @return label predicted
  */
-unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int), unsigned int nFeatures);
+unsigned int KNN(int k, std::vector<float>& dataTraining, std::vector<float>& dataTest, std::vector<unsigned int>& labelsTraining, float (*distanceFunction)(std::vector<float>&, std::vector<float>&, unsigned int), unsigned int nFeatures);
 
 /**
  * @brief Get the Best K object
@@ -100,7 +104,14 @@ unsigned int KNN(int k, std::vector<Point>& dataTraining, Point& dataTest, float
  * @param distanceFunction The distance function to use
  * @return Pair with the best K and the best numbers of predictions
  */
-std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValueK, unsigned short maxValueK, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int));
+std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValueK,
+                                                         unsigned short maxValueK,
+                                                         std::vector<float>& dataTraining,
+                                                         std::vector<float>& dataTest,
+                                                         std::vector<unsigned int>& labelsTraining,
+                                                         std::vector<unsigned int>& labelsTest,
+                                                         float (*distanceFunction)(std::vector<float>&, std::vector<float>&, unsigned int),
+                                                         const Config& config);
 
 /**
  * @brief Get the Confusion Matrix object
@@ -121,7 +132,14 @@ std::vector<std::vector<unsigned int>> getConfusionMatrix(std::vector<unsigned i
  * @param nFeatures The number of features to use in the distance function
  * @return std::pair<std::vector<unsigned int>, unsigned int> that contains the labels predicted and the counter of correct predictions
  */
-std::pair<std::vector<unsigned int>, unsigned int> getScoreKNN(int k, std::vector<Point>& dataTraining, std::vector<Point>& dataTest, float (*distanceFunction)(Point&, Point&, unsigned int), unsigned int nFeatures);
+std::pair<std::vector<unsigned int>, unsigned int> getScoreKNN(int k,
+                                                               std::vector<float>& dataTraining,
+                                                               std::vector<float>& dataTest,
+                                                               std::vector<unsigned int>& labelsTraining,
+                                                               std::vector<unsigned int>& labelsTest,
+                                                               float (*distanceFunction)(std::vector<float>&, std::vector<float>&, unsigned int),
+                                                               unsigned int nFeatures,
+                                                               const Config& config);
 
 /**
  * @brief Get the Euclidean Distance object
@@ -130,7 +148,7 @@ std::pair<std::vector<unsigned int>, unsigned int> getScoreKNN(int k, std::vecto
  * @param nFeatures The number of features to use in the distance function
  * @return float with the Euclidean Distance
  */
-float euclideanDistance(Point& pointTraining, Point& pointTest, unsigned int nFeatures);
+float euclideanDistance(std::vector<float>& pointTraining, std::vector<float>& pointTest, unsigned int nFeatures);
 
 /**
  * @brief Get the Manhattan object
@@ -139,6 +157,6 @@ float euclideanDistance(Point& pointTraining, Point& pointTest, unsigned int nFe
  * @param nFeatures The number of features to use in the distance function
  * @return float with the Manhattan Distance
  */
-float manhattanDistance(Point& pointTraining, Point& pointTest, unsigned int nFeatures);
+float manhattanDistance(std::vector<float>& pointTraining, std::vector<float>& pointTest, unsigned int nFeatures);
 
 #endif

@@ -128,7 +128,6 @@ void createVectorOfPoints(vectorOfData<Point>& dataTrainingPoints,
         dataTestPoints[i] = testPoint;
     }
 }
-
 /********************************* Main ********************************/
 /**
  * @brief Main program
@@ -151,57 +150,58 @@ int main(const int argc, const char** argv) {
     vectorOfData<unsigned int> labelsTraining, labelsTest, MRMR;
     double start, end;
     if (!rank) {
-        start = omp_get_wtime();
+        start = MPI_Wtime();
         readDataFromFiles(dataTraining, dataTest, labelsTraining, labelsTest, MRMR, config);
-        end = omp_get_wtime();
+        end = MPI_Wtime();
         std::cout << "Time to read data: " << end - start << std::endl;
     }
 
     // 2. Sorting by best features (MRMR), get best scores
     if (!rank) {
-        start = omp_get_wtime();
+        start = MPI_Wtime();
         sortFeaturesByMRMR(dataTraining, dataTest, MRMR);
-        end = omp_get_wtime();
+        end = MPI_Wtime();
         std::cout << "Time to sort data with MRMR: " << end - start << std::endl;
     }
 
-    // 3. Fill vectors of Point
-    vectorOfData<Point> dataTrainingPoints, dataTestPoints;
+    // 3. Flatten data
+    vectorOfData<float> dataTrainingLast, dataTestLast;
+    // Print size
     if (!rank) {
-        start = omp_get_wtime();
-        createVectorOfPoints(dataTrainingPoints, dataTestPoints, dataTraining, dataTest, labelsTraining, labelsTest);
-        end = omp_get_wtime();
-        std::cout << "Time to fill vector of Point: " << end - start << std::endl;
+        dataTrainingLast = flatten(dataTraining);
+        dataTestLast = flatten(dataTest);
     }
 
     // Recomendación propagar los vectores de puntos
 
     // 4. Get the best k and number of features to use
     // floor(sqrt(config.nTuples)) // Recommended
-    start = omp_get_wtime();
-    std::pair<unsigned int, unsigned int> bestHyperParams = getBestHyperParams(1, config.nTuples, dataTrainingPoints, dataTestPoints, euclideanDistance);
-    end = omp_get_wtime();
-    std::cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << std::endl;
-    std::cout << "Time getBestHyperParams: " << end - start << std::endl;
+    if (!rank) {
+        start = MPI_Wtime();
+        std::pair<unsigned int, unsigned int> bestHyperParams = getBestHyperParams(1, config.nTuples, dataTrainingLast, dataTestLast, labelsTraining, labelsTest, euclideanDistance, config);
+        end = MPI_Wtime();
+        std::cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << std::endl;
+        std::cout << "Time getBestHyperParams: " << end - start << std::endl;
 
-    // 5. To finalize get the score of the best k and number of features
-    start = omp_get_wtime();
-    std::pair<vectorOfData<unsigned int>, unsigned int> scoreTest = getScoreKNN(bestHyperParams.first, dataTrainingPoints, dataTestPoints, euclideanDistance, bestHyperParams.second);
-    std::pair<vectorOfData<unsigned int>, unsigned int> scoreTraining = getScoreKNN(bestHyperParams.first, dataTrainingPoints, dataTrainingPoints, euclideanDistance, bestHyperParams.second);
-    end = omp_get_wtime();
-    std::cout << "Time KNN: " << end - start << std::endl;
+        // 5. To finalize get the score of the best k and number of features
+        start = MPI_Wtime();
+        std::pair<vectorOfData<unsigned int>, unsigned int> scoreTest = getScoreKNN(bestHyperParams.first, dataTrainingLast, dataTestLast, labelsTraining, labelsTest, euclideanDistance, bestHyperParams.second, config);
+        std::pair<vectorOfData<unsigned int>, unsigned int> scoreTraining = getScoreKNN(bestHyperParams.first, dataTrainingLast, dataTrainingLast, labelsTraining, labelsTraining, euclideanDistance, bestHyperParams.second, config);
+        end = MPI_Wtime();
+        std::cout << "Time KNN: " << end - start << std::endl;
 
-    // 6. Get Confusion Matrix for test
-    vectorOfVectorData<unsigned int> confusionMatrixTest = getConfusionMatrix(labelsTest, scoreTest.first, config.nClasses);
-    std::cout << "Confusion Matrix Test: " << std::endl;
-    printMatrix(confusionMatrixTest);
+        // 6. Get Confusion Matrix for test
+        vectorOfVectorData<unsigned int> confusionMatrixTest = getConfusionMatrix(labelsTest, scoreTest.first, config.nClasses);
+        std::cout << "Confusion Matrix Test: " << std::endl;
+        printMatrix(confusionMatrixTest);
 
-    // vectorOfVectorData<unsigned int> confusionMatrixTraining = getConfusionMatrix(labelsTraining, scoreTraining.first, config.nClasses);
-    // std::cout << "Confusion Matrix Training: " << std::endl;
-    // printMatrix(confusionMatrixTraining);
+        // vectorOfVectorData<unsigned int> confusionMatrixTraining = getConfusionMatrix(labelsTraining, scoreTraining.first, config.nClasses);
+        // std::cout << "Confusion Matrix Training: " << std::endl;
+        // printMatrix(confusionMatrixTraining);
 
-    std::cout << "Accuracy of K-NN classifier on training set: " << ((float)scoreTraining.second / (float)dataTrainingPoints.size()) << std::endl;
-    std::cout << "Accuracy of K-NN classifier on test set: " << ((float)scoreTest.second / (float)dataTestPoints.size()) << std::endl;
+        std::cout << "Accuracy of K-NN classifier on training set: " << ((float)scoreTraining.second / (float)config.nTuples) << std::endl;
+        std::cout << "Accuracy of K-NN classifier on test set: " << ((float)scoreTest.second / (float)config.nTuples) << std::endl;
+    }
 
     MPI_Finalize();
     return EXIT_SUCCESS;
