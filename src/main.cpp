@@ -36,9 +36,9 @@
 #include "omp.h"
 #include "util.h"
 template <typename T>
-using vectorOfVectorData = std::vector<std::vector<T>>;
+using vectorOfVectorData = vector<vector<T>>;
 template <typename T>
-using vectorOfData = std::vector<T>;
+using vectorOfData = vector<T>;
 
 /**
  * @brief Function that read de data from files of config and fill vectors, if use function normalize get best scores
