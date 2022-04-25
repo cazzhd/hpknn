@@ -48,16 +48,16 @@ std::ostream& operator<<(std::ostream& os, const Point& o) {
     return os;
 }
 
-vector<pair<float, unsigned int>> getDistances(const vector<float>& dataTraining,
-                                               const vector<float>& dataTestTuple,
-                                               const vector<unsigned int> labelsTraining,
-                                               float (*distanceFunction)(const std::vector<float>&,
-                                                                         const std::vector<float>&,
-                                                                         const unsigned int,
-                                                                         const unsigned int,
-                                                                         const unsigned int),
-                                               const unsigned int ptrDataTest,
-                                               const unsigned int nFeatures,
+vector<pair<float, unsigned int>> getDistances(vector<float>& dataTraining,
+                                               vector<float>& dataTestTuple,
+                                               vector<unsigned int> labelsTraining,
+                                               float (*distanceFunction)(std::vector<float>&,
+                                                                         std::vector<float>&,
+                                                                         unsigned int,
+                                                                         unsigned int,
+                                                                         unsigned int),
+                                               unsigned int ptrDataTest,
+                                               unsigned int nFeatures,
                                                const Config& config) {
     vector<pair<float, unsigned int>> distances;
 
@@ -73,7 +73,7 @@ vector<pair<float, unsigned int>> getDistances(const vector<float>& dataTraining
     return distances;
 }
 
-unsigned int getMostFrequentClass(int k, const vector<pair<float, unsigned int>>& distances) {
+unsigned int getMostFrequentClass(int k, vector<pair<float, unsigned int>>& distances) {
     map<unsigned int, int, greater<int>> counters;
     for (auto it = distances.begin(); it != distances.begin() + k; ++it) {
         counters[it->second]++;
@@ -83,32 +83,32 @@ unsigned int getMostFrequentClass(int k, const vector<pair<float, unsigned int>>
 }
 
 unsigned int KNN(int k,
-                 const vector<float>& dataTraining,
-                 const vector<float>& dataTest,
-                 const vector<unsigned int>& labelsTraining,
-                 float (*distanceFunction)(const vector<float>&,
-                                           const vector<float>&,
-                                           const unsigned int,
-                                           const unsigned int,
-                                           const unsigned int),
-                 const unsigned int ptrDataTest,
-                 const unsigned int nFeatures,
+                 vector<float>& dataTraining,
+                 vector<float>& dataTest,
+                 vector<unsigned int>& labelsTraining,
+                 float (*distanceFunction)(vector<float>&,
+                                           vector<float>&,
+                                           unsigned int,
+                                           unsigned int,
+                                           unsigned int),
+                 unsigned int ptrDataTest,
+                 unsigned int nFeatures,
                  const Config& config) {
     vector<pair<float, unsigned int>> distances = getDistances(dataTraining, dataTest, labelsTraining, distanceFunction, ptrDataTest, nFeatures, config);
     return getMostFrequentClass(k, distances);
 }
 
-pair<unsigned int, unsigned int> getBestHyperParams(const unsigned short minValueK,
-                                                    const unsigned short maxValueK,
-                                                    const vector<float>& dataTraining,
-                                                    const vector<float>& dataTest,
-                                                    const vector<unsigned int>& labelsTraining,
-                                                    const vector<unsigned int>& labelsTest,
-                                                    float (*distanceFunction)(const vector<float>&,
-                                                                              const vector<float>&,
-                                                                              const unsigned int,
-                                                                              const unsigned int,
-                                                                              const unsigned int),
+pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValueK,
+                                                    unsigned short maxValueK,
+                                                    vector<float>& dataTraining,
+                                                    vector<float>& dataTest,
+                                                    vector<unsigned int>& labelsTraining,
+                                                    vector<unsigned int>& labelsTest,
+                                                    float (*distanceFunction)(vector<float>&,
+                                                                              vector<float>&,
+                                                                              unsigned int,
+                                                                              unsigned int,
+                                                                              unsigned int),
                                                     const Config& config) {
     unsigned int bestK = 0;
     unsigned int bestNFeatures = 0;
@@ -146,9 +146,9 @@ pair<unsigned int, unsigned int> getBestHyperParams(const unsigned short minValu
     return make_pair(bestK, bestNFeatures);
 }
 
-vector<vector<unsigned int>> getConfusionMatrix(const vector<unsigned int>& labels,
-                                                const vector<unsigned int>& labelsPredicted,
-                                                const unsigned int nClasses) {
+vector<vector<unsigned int>> getConfusionMatrix(vector<unsigned int>& labels,
+                                                vector<unsigned int>& labelsPredicted,
+                                                unsigned int nClasses) {
     vector<vector<unsigned int>> confusionMatrix(nClasses, vector<unsigned int>(nClasses));
 
     for (unsigned int i = 0; i < labels.size(); ++i) {
@@ -158,17 +158,17 @@ vector<vector<unsigned int>> getConfusionMatrix(const vector<unsigned int>& labe
     return confusionMatrix;
 }
 
-pair<vector<unsigned int>, unsigned int> getScoreKNN(const int k,
-                                                     const vector<float>& dataTraining,
-                                                     const vector<float>& dataTest,
-                                                     const vector<unsigned int>& labelsTraining,
-                                                     const vector<unsigned int>& labelsTest,
-                                                     float (*distanceFunction)(const vector<float>&,
-                                                                               const vector<float>&,
-                                                                               const unsigned int,
-                                                                               const unsigned int,
-                                                                               const unsigned int),
-                                                     const unsigned int nFeatures,
+pair<vector<unsigned int>, unsigned int> getScoreKNN(int k,
+                                                     vector<float>& dataTraining,
+                                                     vector<float>& dataTest,
+                                                     vector<unsigned int>& labelsTraining,
+                                                     vector<unsigned int>& labelsTest,
+                                                     float (*distanceFunction)(vector<float>&,
+                                                                               vector<float>&,
+                                                                               unsigned int,
+                                                                               unsigned int,
+                                                                               unsigned int),
+                                                     unsigned int nFeatures,
                                                      const Config& config) {
     unsigned int counterSuccess = 0;
     vector<unsigned int> labelsPredicted;
@@ -187,11 +187,11 @@ pair<vector<unsigned int>, unsigned int> getScoreKNN(const int k,
     return make_pair(labelsPredicted, counterSuccess);
 }
 
-float euclideanDistance(const std::vector<float>& dataTraining,
-                        const std::vector<float>& dataTest,
-                        const unsigned int ptrDataTraining,
-                        const unsigned int ptrDataTest,
-                        const unsigned int nFeatures) {
+float euclideanDistance(std::vector<float>& dataTraining,
+                        std::vector<float>& dataTest,
+                        unsigned int ptrDataTraining,
+                        unsigned int ptrDataTest,
+                        unsigned int nFeatures) {
     float distance = 0;
 
 #pragma omp parallel for simd reduction(+ \
@@ -203,11 +203,11 @@ float euclideanDistance(const std::vector<float>& dataTraining,
     return sqrt(distance);
 }
 
-float manhattanDistance(const vector<float>& dataTraining,
-                        const vector<float>& dataTest,
-                        const unsigned int nFeatures,
-                        const unsigned int ptrDataTraining,
-                        const unsigned int ptrDataTest) {
+float manhattanDistance(vector<float>& dataTraining,
+                        vector<float>& dataTest,
+                        unsigned int nFeatures,
+                        unsigned int ptrDataTraining,
+                        unsigned int ptrDataTest) {
     float distance = 0;
 
 #pragma omp parallel for simd reduction(+ \

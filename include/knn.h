@@ -72,16 +72,16 @@ struct Point {
  * @param config The configuration of the algorithm
  * @return vectors of pairs with distance and label
  */
-vector<pair<float, unsigned int>> getDistances(const vector<float>& dataTraining,
-                                               const vector<float>& dataTest,
-                                               const vector<unsigned int> labelsTraining,
-                                               float (*distanceFunction)(const vector<float>&,
-                                                                         const vector<float>&,
-                                                                         const unsigned int,
-                                                                         const unsigned int,
-                                                                         const unsigned int),
-                                               const unsigned int ptrDataTest,
-                                               const unsigned int nFeatures,
+vector<pair<float, unsigned int>> getDistances(vector<float>& dataTraining,
+                                               vector<float>& dataTest,
+                                               vector<unsigned int> labelsTraining,
+                                               float (*distanceFunction)(vector<float>&,
+                                                                         vector<float>&,
+                                                                         unsigned int,
+                                                                         unsigned int,
+                                                                         unsigned int),
+                                               unsigned int ptrDataTest,
+                                               unsigned int nFeatures,
                                                const Config& config);
 
 /**
@@ -90,7 +90,7 @@ vector<pair<float, unsigned int>> getDistances(const vector<float>& dataTraining
  * @param distances Vector of pairs with distance and label
  * @return the most frequent class
  */
-unsigned int getMostFrequentClass(int k, const vector<pair<float, unsigned int>>& distances);
+unsigned int getMostFrequentClass(int k, vector<pair<float, unsigned int>>& distances);
 
 /**
  * @brief Using the KNN algorithm to find the nearest neighbors
@@ -105,16 +105,16 @@ unsigned int getMostFrequentClass(int k, const vector<pair<float, unsigned int>>
  * @return label predicted
  */
 unsigned int KNN(int k,
-                 const vector<float>& dataTraining,
-                 const vector<float>& dataTest,
-                 const vector<unsigned int>& labelsTraining,
-                 float (*distanceFunction)(const vector<float>&,
-                                           const vector<float>&,
-                                           const unsigned int,
-                                           const unsigned int,
-                                           const unsigned int),
-                 const unsigned int ptrDataTest,
-                 const unsigned int nFeatures,
+                 vector<float>& dataTraining,
+                 vector<float>& dataTest,
+                 vector<unsigned int>& labelsTraining,
+                 float (*distanceFunction)(vector<float>&,
+                                           vector<float>&,
+                                           unsigned int,
+                                           unsigned int,
+                                           unsigned int),
+                 unsigned int ptrDataTest,
+                 unsigned int nFeatures,
                  const Config& config);
 
 /**
@@ -129,17 +129,17 @@ unsigned int KNN(int k,
  * @param config The configuration of the algorithm
  * @return Pair with the best K and the best numbers of predictions
  */
-pair<unsigned int, unsigned int> getBestHyperParams(const unsigned short minValueK,
-                                                    const unsigned short maxValueK,
-                                                    const vector<float>& dataTraining,
-                                                    const vector<float>& dataTest,
-                                                    const vector<unsigned int>& labelsTraining,
-                                                    const vector<unsigned int>& labelsTest,
-                                                    float (*distanceFunction)(const vector<float>&,
-                                                                              const vector<float>&,
-                                                                              const unsigned int,
-                                                                              const unsigned int,
-                                                                              const unsigned int),
+pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValueK,
+                                                    unsigned short maxValueK,
+                                                    vector<float>& dataTraining,
+                                                    vector<float>& dataTest,
+                                                    vector<unsigned int>& labelsTraining,
+                                                    vector<unsigned int>& labelsTest,
+                                                    float (*distanceFunction)(vector<float>&,
+                                                                              vector<float>&,
+                                                                              unsigned int,
+                                                                              unsigned int,
+                                                                              unsigned int),
                                                     const Config& config);
 
 /**
@@ -149,9 +149,9 @@ pair<unsigned int, unsigned int> getBestHyperParams(const unsigned short minValu
  * @param nClasses The number of classes
  * @return vector<vector<unsigned int>> that contains the confusion matrix
  */
-vector<vector<unsigned int>> getConfusionMatrix(const vector<unsigned int>& labels,
-                                                const vector<unsigned int>& labelsPredicted,
-                                                const unsigned int nClasses);
+vector<vector<unsigned int>> getConfusionMatrix(vector<unsigned int>& labels,
+                                                vector<unsigned int>& labelsPredicted,
+                                                unsigned int nClasses);
 
 /**
  * @brief Get the Score from KNN
@@ -166,17 +166,17 @@ vector<vector<unsigned int>> getConfusionMatrix(const vector<unsigned int>& labe
  * @param config The configuration of the algorithm
  * @return pair<vector<unsigned int>, unsigned int> that contains the labels predicted and the counter of correct predictions
  */
-pair<vector<unsigned int>, unsigned int> getScoreKNN(const int k,
-                                                     const vector<float>& dataTraining,
-                                                     const vector<float>& dataTest,
-                                                     const vector<unsigned int>& labelsTraining,
-                                                     const vector<unsigned int>& labelsTest,
-                                                     float (*distanceFunction)(const vector<float>&,
-                                                                               const vector<float>&,
-                                                                               const unsigned int,
-                                                                               const unsigned int,
-                                                                               const unsigned int),
-                                                     const unsigned int nFeatures,
+pair<vector<unsigned int>, unsigned int> getScoreKNN(int k,
+                                                     vector<float>& dataTraining,
+                                                     vector<float>& dataTest,
+                                                     vector<unsigned int>& labelsTraining,
+                                                     vector<unsigned int>& labelsTest,
+                                                     float (*distanceFunction)(vector<float>&,
+                                                                               vector<float>&,
+                                                                               unsigned int,
+                                                                               unsigned int,
+                                                                               unsigned int),
+                                                     unsigned int nFeatures,
                                                      const Config& config);
 
 /**
@@ -188,11 +188,11 @@ pair<vector<unsigned int>, unsigned int> getScoreKNN(const int k,
  * @param nFeatures The number of features to use in the distance function
  * @return float with the Euclidean Distance
  */
-float euclideanDistance(const vector<float>& dataTraining,
-                        const vector<float>& dataTest,
-                        const unsigned int ptrDataTraining,
-                        const unsigned int ptrDataTest,
-                        const unsigned int nFeatures);
+float euclideanDistance(vector<float>& dataTraining,
+                        vector<float>& dataTest,
+                        unsigned int ptrDataTraining,
+                        unsigned int ptrDataTest,
+                        unsigned int nFeatures);
 
 /**
  * @brief Get the Manhattan object
@@ -203,10 +203,10 @@ float euclideanDistance(const vector<float>& dataTraining,
  * @param nFeatures The number of features to use in the distance function
  * @return float with the Manhattan Distance
  */
-float manhattanDistance(const vector<float>& dataTraining,
-                        const vector<float>& dataTest,
-                        const unsigned int ptrDataTraining,
-                        const unsigned int ptrDataTest,
-                        const unsigned int nFeatures);
+float manhattanDistance(vector<float>& dataTraining,
+                        vector<float>& dataTest,
+                        unsigned int ptrDataTraining,
+                        unsigned int ptrDataTest,
+                        unsigned int nFeatures);
 
 #endif
