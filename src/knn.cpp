@@ -61,7 +61,8 @@ vector<pair<float, unsigned int>> getDistances(vector<float>& dataTraining,
                                                const Config& config) {
     vector<pair<float, unsigned int>> distances;
 
-    for (unsigned int i = 0; i < dataTraining.size() / config.nFeatures; ++i) {
+    unsigned int nTuples = dataTraining.size() / config.nFeatures;
+    for (unsigned int i = 0; i < nTuples; ++i) {
         float distance = distanceFunction(dataTraining, dataTestTuple, i * config.nFeatures, ptrDataTest, nFeatures);
         distances.push_back(make_pair(distance, labelsTraining[i]));
     }
@@ -117,11 +118,12 @@ pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValueK,
     bar.set_theme_braille();
 
     // Iterate for all features
+    unsigned int nTuples = dataTest.size() / config.nFeatures;
     for (unsigned int f = 1; f < 500; ++f) {
         bar.progress(f, 500);
         vector<float> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)
-        for (unsigned int i = 0; i < dataTest.size() / config.nFeatures; ++i) {
+        for (unsigned int i = 0; i < nTuples; ++i) {
             vector<pair<float, unsigned int>> distances = getDistances(dataTraining, dataTest, labelsTraining, distanceFunction, i * config.nFeatures, f, config);
             for (unsigned int k = minValueK; k <= maxValueK; ++k) {
                 unsigned int labelPredicted = getMostFrequentClass(k, distances);
@@ -174,8 +176,9 @@ pair<vector<unsigned int>, unsigned int> getScoreKNN(int k,
     vector<unsigned int> labelsPredicted;
     labelsPredicted.resize(dataTraining.size());
 
+    unsigned int nTuples = dataTest.size() / config.nFeatures;
 #pragma omp parallel for
-    for (unsigned int i = 0; i < dataTest.size() / config.nFeatures; ++i) {
+    for (unsigned int i = 0; i < nTuples; ++i) {
         unsigned int labelPredicted = KNN(k, dataTraining, dataTest, labelsTraining, distanceFunction, i * config.nFeatures, nFeatures, config);
         labelsPredicted[i] = labelPredicted;
         if (labelPredicted == labelsTest[i]) {
