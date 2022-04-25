@@ -73,7 +73,8 @@ struct Point {
 std::vector<std::pair<float, unsigned int>> getDistances(std::vector<float>& dataTraining,
                                                          std::vector<float>& dataTest,
                                                          std::vector<unsigned int> labelsTraining,
-                                                         float (*distanceFunction)(std::vector<float>&, std::vector<float>&, unsigned int),
+                                                         float (*distanceFunction)(std::vector<float>&, std::vector<float>&, unsigned int, unsigned int, unsigned int),
+                                                         unsigned int ptrDataTest,
                                                          unsigned int nFeatures);
 
 /**
@@ -93,7 +94,13 @@ unsigned int getMostFrequentClass(int k, std::vector<std::pair<float, unsigned i
  * @param nFeatures The number of features to use in the distance function
  * @return label predicted
  */
-unsigned int KNN(int k, std::vector<float>& dataTraining, std::vector<float>& dataTest, std::vector<unsigned int>& labelsTraining, float (*distanceFunction)(std::vector<float>&, std::vector<float>&, unsigned int), unsigned int nFeatures);
+unsigned int KNN(int k,
+                 std::vector<float>& dataTraining,
+                 std::vector<float>& dataTest,
+                 std::vector<unsigned int>& labelsTraining,
+                 float (*distanceFunction)(std::vector<float>&, std::vector<float>&, unsigned int, unsigned int, unsigned int),
+                 unsigned int ptrDataTest,
+                 unsigned int nFeatures);
 
 /**
  * @brief Get the Best K object
@@ -110,7 +117,7 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
                                                          std::vector<float>& dataTest,
                                                          std::vector<unsigned int>& labelsTraining,
                                                          std::vector<unsigned int>& labelsTest,
-                                                         float (*distanceFunction)(std::vector<float>&, std::vector<float>&, unsigned int),
+                                                         float (*distanceFunction)(std::vector<float>&, std::vector<float>&, unsigned int, unsigned int, unsigned int),
                                                          const Config& config);
 
 /**
@@ -137,7 +144,7 @@ std::pair<std::vector<unsigned int>, unsigned int> getScoreKNN(int k,
                                                                std::vector<float>& dataTest,
                                                                std::vector<unsigned int>& labelsTraining,
                                                                std::vector<unsigned int>& labelsTest,
-                                                               float (*distanceFunction)(std::vector<float>&, std::vector<float>&, unsigned int),
+                                                               float (*distanceFunction)(std::vector<float>&, std::vector<float>&, unsigned int, unsigned int, unsigned int),
                                                                unsigned int nFeatures,
                                                                const Config& config);
 
@@ -148,7 +155,11 @@ std::pair<std::vector<unsigned int>, unsigned int> getScoreKNN(int k,
  * @param nFeatures The number of features to use in the distance function
  * @return float with the Euclidean Distance
  */
-float euclideanDistance(std::vector<float>& pointTraining, std::vector<float>& pointTest, unsigned int nFeatures);
+float euclideanDistance(std::vector<float>& pointTraining,
+                        std::vector<float>& pointTest,
+                        unsigned int ptrDataTraining,
+                        unsigned int ptrDataTest,
+                        unsigned int nFeatures);
 
 /**
  * @brief Get the Manhattan object
