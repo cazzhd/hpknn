@@ -32,7 +32,7 @@
 /******************************** Constants *******************************/
 
 /********************************* Methods ********************************/
-Config::Config(const int argc, const char** argv) {
+Config::Config(int argc, char** argv) {
     /************ Init the parser ***********/
     CmdParser parser(
         "HPKNN is a Parallel and Distributed K-NN for Energyaware "
@@ -53,7 +53,7 @@ Config::Config(const int argc, const char** argv) {
         if (!MPI::COMM_WORLD.Get_rank()) {
             parser.printHelp();
         }
-        MPI::Finalize();
+        MPI_Finalize();
         exit(EXIT_SUCCESS);
     }
 
@@ -72,9 +72,12 @@ Config::Config(const int argc, const char** argv) {
     std::ifstream fileConfig(filename.c_str());
     std::stringstream buffer;
     std::string line;
-    while (getline(fileConfig, line)) buffer << line << "\r\n";
+    while (std::getline(fileConfig, line)) buffer << line << "\r\n";
 
     struct_mapping::map_json_to_struct(*this, buffer);
+
+    /************ Check if size of data is divisible by the number of processors ***********/
+    check(nTuples * nFeatures % MPI::COMM_WORLD.Get_size(), "%s\n", ERROR_NPROCESS);
 }
 
 Config::~Config() {}
@@ -98,7 +101,6 @@ void check(const bool cond, const char* const format, ...) {
         fprintf(stderr, "Process %d: ", MPI::COMM_WORLD.Get_rank());
         vfprintf(stderr, format, args);
         va_end(args);
-        MPI::COMM_WORLD.Abort(-1);
-        exit(EXIT_FAILURE);
+        MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 }

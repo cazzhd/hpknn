@@ -25,6 +25,8 @@
 /******************************** Constants *******************************/
 const char* const ERROR_PARSE_ARGUMENTS =
     "Error: Missing required value of the argument or nothing to parse, please use -h for more information.";
+const char* const ERROR_NPROCESS =
+    "Error: Number of data ntuple * nfeatures is not divisible by the number of processors";
 
 /******************************** Structures ******************************/
 
@@ -48,7 +50,7 @@ typedef struct Config {
      * @param argv The command-line parameters
      * @return An object containing all configuration parameters
      */
-    Config(const int argc, const char** argv);
+    Config(int argc, char** argv);
 
     /**
      * @brief Destroy the Config:: Config object
@@ -60,7 +62,7 @@ typedef struct Config {
      * @brief Overload operator << to print in the standard output info about Config
      * @param os stream output
      * @param o object Config
-     * @return std::ostream& stream with info
+     * @return ostream& stream with info
      */
     friend std::ostream& operator<<(std::ostream& os, const Config& o);
 } Config;

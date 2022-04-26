@@ -26,132 +26,15 @@
 #include <string>
 
 /******************************** Constants *******************************/
-template std::vector<std::vector<float>> CSVReader::readData(std::string filename);
-template std::vector<std::vector<unsigned int>> CSVReader::readData(std::string filename);
+template std::vector<float> CSVReader::readData(std::string filename);
+template std::vector<unsigned int> CSVReader::readData(std::string filename);
 
 /********************************* Methods ********************************/
-BBDD::BBDD(const char* filename) {
-    std::ifstream dbFile;
-    std::string line;
-
-    dbFile.open(filename);
-
-    /********** Getting the database dimensions ***********/
-    if (dbFile.is_open()) {
-        float data;
-        unsigned int nCols = 0, nRows = 1;
-
-        getline(dbFile, line);
-        std::stringstream ss(line);
-        while (ss >> data) {
-            ++nCols;
-        }
-
-        while (getline(dbFile, line)) {
-            ++nRows;
-            std::stringstream ss(line);
-            unsigned tmpNcols = 0;
-            while (ss >> data) {
-                ++tmpNcols;
-            }
-
-            check(tmpNcols != nCols, "%s\n", ERROR_DIMENSION_DB);
-        }
-
-        int dbSize = nRows * nCols;
-        float* dataDb = new float[dbSize];
-        dbFile.clear();
-        dbFile.seekg(0);
-        for (int i = 0; i < dbSize; ++i) {
-            dbFile >> dataDb[i];
-        }
-
-        dbFile.close();
-
-        this->nRows = nRows;
-        this->nCols = nCols;
-        this->sizeBBDD = dbSize;
-        this->db = dataDb;
-    } else {
-        check(true, "%s\n", ERROR_OPEN_DB);
-    }
-}
-
-BBDD::~BBDD() { delete[] this->db; }
-
-unsigned int BBDD::getRows() { return this->nRows; }
-
-unsigned int BBDD::getCols() { return this->nCols; }
-
-int BBDD::getSizeBBDD() { return this->sizeBBDD; }
-
-float* BBDD::getDB() { return this->db; }
-
-std::ostream& operator<<(std::ostream& os, const BBDD& o) {
-    os << "Ncols: " << o.nCols << std::endl;
-    os << "Nrows: " << o.nRows << std::endl;
-    os << "Size: " << o.sizeBBDD << std::endl;
-
-    return os;
-}
-
 CSVReader::CSVReader(const char delimiter) : delimiter(delimiter) {}
 
-float* CSVReader::readData(const char* filename) {
-    float* dataDb;
-    std::ifstream dbFile;
-    std::string line;
-
-    dbFile.open(filename);
-
-    /********** Getting the database dimensions ***********/
-    if (dbFile.is_open()) {
-        std::string data;
-        unsigned int nCols = 0, nRows = 1;
-
-        getline(dbFile, line);
-        // std::replace(line.begin(), line.end(), ',', ' ');
-        std::stringstream ss(line);
-        while (std::getline(ss, data, this->delimiter)) {
-            ++nCols;
-        }
-
-        while (getline(dbFile, line)) {
-            ++nRows;
-            // std::replace(line.begin(), line.end(), ',', ' ');
-            std::stringstream ss(line);
-            unsigned tmpNcols = 0;
-            while (std::getline(ss, data, this->delimiter)) {
-                ++tmpNcols;
-            }
-
-            check(tmpNcols != nCols, "%s\n", ERROR_DIMENSION_DB);
-        }
-
-        int dbSize = nRows * nCols;
-        dataDb = new float[dbSize];
-        dbFile.clear();
-        dbFile.seekg(0);
-
-        unsigned int i = 0;
-        while (getline(dbFile, line)) {
-            // std::replace(line.begin(), line.end(), ',', ' ');
-            std::stringstream ss(line);
-            while (ss >> data) {
-                dataDb[i++] = std::stof(data);
-            }
-        }
-
-        dbFile.close();
-    } else {
-        check(true, "%s\n", ERROR_OPEN_DB);
-    }
-    return dataDb;
-}
-
 template <typename T>
-std::vector<std::vector<T>> CSVReader::readData(std::string filename) {
-    std::vector<std::vector<T>> dataDb;
+std::vector<T> CSVReader::readData(std::string filename) {
+    std::vector<T> dataDb;
     std::ifstream dbFile;
     std::string line;
 
@@ -163,7 +46,6 @@ std::vector<std::vector<T>> CSVReader::readData(std::string filename) {
         unsigned int nCols = 0, nRows = 1;
 
         getline(dbFile, line);
-        // std::replace(line.begin(), line.end(), ',', ' ');
         std::stringstream ss(line);
         while (std::getline(ss, data, this->delimiter)) {
             ++nCols;
@@ -171,7 +53,6 @@ std::vector<std::vector<T>> CSVReader::readData(std::string filename) {
 
         while (getline(dbFile, line)) {
             ++nRows;
-            // std::replace(line.begin(), line.end(), ',', ' ');
             std::stringstream ss(line);
             unsigned tmpNcols = 0;
             while (std::getline(ss, data, this->delimiter)) {
@@ -183,15 +64,11 @@ std::vector<std::vector<T>> CSVReader::readData(std::string filename) {
 
         dbFile.clear();
         dbFile.seekg(0);
-        std::vector<T> tupleData;
         while (getline(dbFile, line)) {
-            // std::replace(line.begin(), line.end(), ',', ' ');
             std::stringstream ss(line);
             while (std::getline(ss, data, this->delimiter)) {
-                tupleData.push_back(std::stof(data));
+                dataDb.push_back(std::stof(data));
             }
-            dataDb.push_back(tupleData);
-            tupleData.clear();
         }
 
         dbFile.close();

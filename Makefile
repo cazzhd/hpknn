@@ -24,7 +24,7 @@ COMPILER	:= $(if $(filter true,${mpi}),$(MPICXX),$(CXX))
 NP			:= $(if ${np},-np $(np),)
 NT			:= $(if ${nt},-x OMP_NUM_THREADS=$(nt),)
 
-CXXFLAGS	:= -std=c++17 -Wall -Wextra -g
+CXXFLAGS	:= -std=c++17 -Wall -g
 OPT 		:= -O2 -funroll-loops
 OMP 		= -fopenmp
 GPROF 		= -pg

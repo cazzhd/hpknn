@@ -30,63 +30,6 @@ const char* const ERROR_OPEN_DB = "Error: Cannot open database file.";
 
 /********************************* Methods ********************************/
 /**
- * @brief Class of BBDD that permit read the EGG Database
- */
-class BBDD {
-   private:
-    /********** Attributes ***********/
-    unsigned int nRows; /**< Number of rows of the database */
-    unsigned int nCols; /**< Number of columns of the database */
-    int sizeBBDD;       /**< Size of the database */
-    float* db;          /**< Database */
-
-   public:
-    /********** Methods ***********/
-    /**
-     * @brief Constructor of the class
-     * @param filename The name of the file to read
-     */
-    BBDD(const char* filename);
-
-    /**
-     * @brief Destructor of the class
-     */
-    ~BBDD();
-
-    /**
-     * @brief Get nRows of the database
-     * @return unsigned int with the number of rows
-     */
-    unsigned int getRows();
-
-    /**
-     * @brief Get nCols of the database
-     * @return unsigned int with the number of cols
-     */
-    unsigned int getCols();
-
-    /**
-     * @brief Get sizeBBDD of the database
-     * @return int with the size of the database
-     */
-    int getSizeBBDD();
-
-    /**
-     * @brief Get the database
-     * @return float* pointing to the database
-     */
-    float* getDB();
-
-    /**
-     * @brief Overload operator << to print in the standard output info about BBDD
-     * @param os stream output
-     * @param o object BBDD
-     * @return std::ostream& stream with info
-     */
-    friend std::ostream& operator<<(std::ostream& os, const BBDD& o);
-};
-
-/**
  * @brief Class of CSVReader that permit read the EGG Database with format CSV
  */
 class CSVReader {
@@ -105,14 +48,8 @@ class CSVReader {
      * @brief Read the Data from the CSV file in a vector of vector of float
      * @param filename The name of the file to read
      */
-    float* readData(const char* filename);
-
-    /**
-     * @brief Read the Data from the CSV file in a vector of vector of float
-     * @param filename The name of the file to read
-     */
     template <typename T>
-    std::vector<std::vector<T>> readData(std::string filename);
+    std::vector<T> readData(std::string filename);
 };
 
 #endif
