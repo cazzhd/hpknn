@@ -19,12 +19,14 @@
 /********************************* Includes *******************************/
 #include "knn.h"
 
+#include <mpi.h>
+#include <omp.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <iostream>
 
-#include "omp.h"
 #include "tqdm.h"
 
 /******************************** Constants *******************************/
@@ -99,10 +101,17 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
     tqdm bar;
     bar.set_theme_braille();
 
+    // Get rank MPI
+    int rank = MPI::COMM_WORLD.Get_rank();
+    int size = MPI::COMM_WORLD.Get_size();
+
     // Iterate for all features
     unsigned int nTuples = dataTest.size() / config.nFeatures;
-    for (unsigned int f = 1; f < 500; ++f) {
-        bar.progress(f, 500);
+
+    float inverseNTuples = 1.0 / nTuples;
+    for (unsigned int f = 1 + rank; f < config.nFeatures / size; f += size) {
+        // printf("\nProcess %d/%d iterate %d\n", rank, size, f);
+        bar.progress(f, config.nFeatures / size);
         std::vector<float> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)
         for (unsigned int i = 0; i < nTuples; ++i) {
@@ -117,16 +126,17 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
 // Iterate for vectorAccuracies
 #pragma omp parallel for schedule(dynamic)
         for (unsigned int i = 0; i < vectorAccuracies.size(); ++i) {
-            vectorAccuracies[i] /= dataTest.size();
+            vectorAccuracies[i] *= inverseNTuples;
             if (vectorAccuracies[i] > bestAccuracy) {
                 bestAccuracy = vectorAccuracies[i];
                 bestK = i + minValueK;
                 bestNFeatures = f;
+                // printf("\nProcess %d/%d iterate %d\n", rank, size, f);
             }
         }
     }
 
-    bar.finish();
+    // bar.finish();
     return std::make_pair(bestK, bestNFeatures);
 }
 

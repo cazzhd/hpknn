@@ -48,6 +48,7 @@ int main(int argc, char* argv[]) {
     int size, rank, namelen;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
 
+    // Initialize enviroment MPI
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -56,43 +57,48 @@ int main(int argc, char* argv[]) {
     Config config(argc, argv);
     const unsigned int TAM = config.nTuples * config.nFeatures;
 
-    // 1. Read data from files
     vector<float> dataTraining, dataTest;
     vector<unsigned int> labelsTraining, labelsTest, MRMR;
-    // labelsTraining.resize(config.nTuples);
-    double start, end;
+
+    dataTraining.resize(TAM);
+    dataTest.resize(TAM);
+    labelsTraining.resize(config.nTuples);
+    labelsTest.resize(config.nTuples);
 
     // Present each process with mpi
     printf("\nHybrid: Hello from process %d/%d on %s\n", rank, size, processor_name);
 
+    double start, end;
     if (!rank) {
+        // 1. Read data from files
         start = MPI_Wtime();
         readDataFromFiles(dataTraining, dataTest, labelsTraining, labelsTest, MRMR, config);
         end = MPI_Wtime();
         cout << "Time to read data: " << end - start << endl;
-    }
 
-    // 2. Sorting by best features (MRMR), get best scores
-    if (!rank) {
+        // 2. Sorting by best features (MRMR), get best scores
         start = MPI_Wtime();
         sortFeaturesByMRMR(dataTraining, dataTest, MRMR, config);
         end = MPI_Wtime();
         cout << "Time to sort data with MRMR: " << end - start << endl;
     }
 
-    // // dataTraining bcast to all processes
-    // MPI_Bcast(&dataTraining[0], dataTraining.size(), MPI_FLOAT, 0, MPI_COMM_WORLD);
+    // dataTraining bcast to all processes
+    MPI_Bcast(&dataTraining[0], dataTraining.size(), MPI_FLOAT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&dataTest[0], dataTest.size(), MPI_FLOAT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&labelsTraining[0], labelsTraining.size(), MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&labelsTest[0], labelsTest.size(), MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+
     // MPI_Bcast(&labelsTraining[0], labelsTraining.size(), MPI_UNSIGNED, 0, MPI_COMM_WORLD);
 
-    // 3. Get the best k and number of features to use
-    // floor(sqrt(config.nTuples)) // Recommended
+    // 3. Get the best k and number of features to use, floor(sqrt(config.nTuples)) // Recommended
+    start = MPI_Wtime();
+    pair<unsigned int, unsigned int> bestHyperParams = getBestHyperParams(1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config);
+    end = MPI_Wtime();
+
     if (!rank) {
-        start = MPI_Wtime();
-        pair<unsigned int, unsigned int> bestHyperParams = getBestHyperParams(1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config);
-        end = MPI_Wtime();
         cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << endl;
         cout << "Time getBestHyperParams: " << end - start << endl;
-
         // 4. To finalize get the score of the best k and number of features
         start = MPI_Wtime();
         pair<vector<unsigned int>, unsigned int> scoreTest = getScoreKNN(bestHyperParams.first, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, bestHyperParams.second, config);
