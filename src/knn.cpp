@@ -105,15 +105,13 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
     int rank = MPI::COMM_WORLD.Get_rank();
     int size = MPI::COMM_WORLD.Get_size();
 
-    // Iterate for all features
-    unsigned int nTuples = dataTest.size() / config.nFeatures;
-    unsigned int sizePerProcess = config.nFeatures / size;
+    unsigned int sizePerProcess = 500 / size;
 
     for (unsigned int f = 1 + rank; f < sizePerProcess; f += size) {
         // bar.progress(f, sizePerProcess);
         std::vector<unsigned int> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)
-        for (unsigned int i = 0; i < nTuples; ++i) {
+        for (unsigned int i = 0; i < config.nTuples; ++i) {
             std::vector<std::pair<float, unsigned int>> distances = getDistances(dataTraining, dataTest, labelsTraining, distanceFunction, i * config.nFeatures, f, config);
             for (unsigned int k = minValueK; k <= maxValueK; ++k) {
                 unsigned int labelPredicted = getMostFrequentClass(k, distances);
@@ -134,6 +132,7 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
     }
 
     // The process has best accuracy send bestK and bestNFeatures to root
+
     std::vector<unsigned int> bestKs(size, 0);
     std::vector<unsigned int> bestNFeaturess(size, 0);
     std::vector<unsigned int> bestAccuracies(size, 0);
@@ -156,6 +155,7 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
     }
 
     return std::make_pair(bestKs[indexBestAccuracy], bestNFeaturess[indexBestAccuracy]);
+
     // bar.finish();
 }
 
