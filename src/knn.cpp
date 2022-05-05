@@ -97,9 +97,9 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
                                                          const Config& config) {
     unsigned int bestK = 0;
     unsigned int bestNFeatures = 0;
-    float bestAccuracy = 0;
-    tqdm bar;
-    bar.set_theme_braille();
+    unsigned int bestAccuracy = 0;
+    // tqdm bar;
+    // bar.set_theme_braille();
 
     // Get rank MPI
     int rank = MPI::COMM_WORLD.Get_rank();
@@ -107,12 +107,11 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
 
     // Iterate for all features
     unsigned int nTuples = dataTest.size() / config.nFeatures;
+    unsigned int sizePerProcess = config.nFeatures / size;
 
-    float inverseNTuples = 1.0 / nTuples;
-    for (unsigned int f = 1 + rank; f < config.nFeatures / size; f += size) {
-        // printf("\nProcess %d/%d iterate %d\n", rank, size, f);
-        bar.progress(f, config.nFeatures / size);
-        std::vector<float> vectorAccuracies(maxValueK - minValueK + 1, 0);
+    for (unsigned int f = 1 + rank; f < sizePerProcess; f += size) {
+        // bar.progress(f, sizePerProcess);
+        std::vector<unsigned int> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)
         for (unsigned int i = 0; i < nTuples; ++i) {
             std::vector<std::pair<float, unsigned int>> distances = getDistances(dataTraining, dataTest, labelsTraining, distanceFunction, i * config.nFeatures, f, config);
@@ -126,18 +125,38 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
 // Iterate for vectorAccuracies
 #pragma omp parallel for schedule(dynamic)
         for (unsigned int i = 0; i < vectorAccuracies.size(); ++i) {
-            vectorAccuracies[i] *= inverseNTuples;
             if (vectorAccuracies[i] > bestAccuracy) {
                 bestAccuracy = vectorAccuracies[i];
                 bestK = i + minValueK;
                 bestNFeatures = f;
-                // printf("\nProcess %d/%d iterate %d\n", rank, size, f);
             }
         }
     }
 
+    // The process has best accuracy send bestK and bestNFeatures to root
+    std::vector<unsigned int> bestKs(size, 0);
+    std::vector<unsigned int> bestNFeaturess(size, 0);
+    std::vector<unsigned int> bestAccuracies(size, 0);
+
+    // Each process print bestK and bestNFeatures
+    printf("Process %d: bestK = %d, bestNFeatures = %d, bestAccuracy = %d\n", rank, bestK, bestNFeatures, bestAccuracy);
+
+    MPI_Gather(&bestK, 1, MPI_UNSIGNED, bestKs.data(), 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+    MPI_Gather(&bestNFeatures, 1, MPI_UNSIGNED, bestNFeaturess.data(), 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+    MPI_Gather(&bestAccuracy, 1, MPI_UNSIGNED, bestAccuracies.data(), 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+
+    // Get index of bestAccuracy
+    unsigned int indexBestAccuracy = 0;
+    if (!rank) {
+        for (unsigned int i = 0; i < bestAccuracies.size(); ++i) {
+            if (bestAccuracies[i] > bestAccuracies[indexBestAccuracy]) {
+                indexBestAccuracy = i;
+            }
+        }
+    }
+
+    return std::make_pair(bestKs[indexBestAccuracy], bestNFeaturess[indexBestAccuracy]);
     // bar.finish();
-    return std::make_pair(bestK, bestNFeatures);
 }
 
 std::vector<std::vector<unsigned int>> getConfusionMatrix(std::vector<unsigned int>& labels,

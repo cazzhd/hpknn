@@ -89,8 +89,6 @@ int main(int argc, char* argv[]) {
     MPI_Bcast(&labelsTraining[0], labelsTraining.size(), MPI_UNSIGNED, 0, MPI_COMM_WORLD);
     MPI_Bcast(&labelsTest[0], labelsTest.size(), MPI_UNSIGNED, 0, MPI_COMM_WORLD);
 
-    // MPI_Bcast(&labelsTraining[0], labelsTraining.size(), MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-
     // 3. Get the best k and number of features to use, floor(sqrt(config.nTuples)) // Recommended
     start = MPI_Wtime();
     pair<unsigned int, unsigned int> bestHyperParams = getBestHyperParams(1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config);

@@ -85,7 +85,7 @@ template <typename T>
  * @param original The original vector
  * @param indexes The indexes to sort the vector by column
  * @param config The configuration of project to get nFeatures
- * @return std::vector<<T>
+ * @return std::vector<T>
  */
 std::vector<T> sorting_by_indexes_vector(const std::vector<T> &original, const std::vector<unsigned int> &indexes, const Config &config) {
     std::vector<T> sorted;
@@ -161,6 +161,7 @@ void readDataFromFiles(std::vector<float> &dataTraining,
  * @param dataTraining vector of data training
  * @param dataTest vector of data test
  * @param MRMR vector of MRMR
+ * @param config configuration of program
  */
 void sortFeaturesByMRMR(std::vector<float> &dataTraining, std::vector<float> &dataTest, const std::vector<unsigned int> &MRMR, const Config &config) {
 #pragma omp parallel sections
