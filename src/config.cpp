@@ -40,9 +40,12 @@ Config::Config(int argc, char** argv) {
         "mpirun [MPI OPTIONS] ./bin/hpknn [ARGS]", "Hpknn(c) 2015 EFFICOMP");
     parser.addExample("./bin/hpknn -h");
     parser.addExample("./bin/hpknn -conf \"config.json\"");
+    parser.addExample("./bin/hpknn -mode [homo,hetero] -conf \"config.json\"");
 
     /************ Add arguments ***********/
     parser.addArg("-h", false, "Display usage instructions.");
+    parser.addArg("-mode", true,
+                  "Two modes [homo,hetero] for heterogeneous platforms or homogeneous platforms.");
     parser.addArg("-conf", true, "Name of the file containing the JSON configuration file.");
 
     /************ Parse and check the missing arguments ***********/
@@ -59,6 +62,10 @@ Config::Config(int argc, char** argv) {
 
     /************ Get the JSON/command-line parameters ***********/
     std::string filename = parser.getValue<char*>("-conf");
+    this->mode = parser.getValue<char*>("-mode");
+
+    // Check if mode is valid
+    check(!(this->mode.compare("homo") || this->mode.compare("hetero")), "%s\n", ERROR_MODE);
 
     struct_mapping::reg(&Config::dbDataTest, "dbDataTest");
     struct_mapping::reg(&Config::dbLabelsTest, "dbLabelsTest");
@@ -68,6 +75,9 @@ Config::Config(int argc, char** argv) {
     struct_mapping::reg(&Config::nTuples, "nTuples");
     struct_mapping::reg(&Config::nFeatures, "nFeatures");
     struct_mapping::reg(&Config::nClasses, "nClasses");
+    struct_mapping::reg(&Config::normalize, "normalize");
+    struct_mapping::reg(&Config::sortingByMRMR, "sortingByMRMR");
+    struct_mapping::reg(&Config::maxFeatures, "maxFeatures");
 
     std::ifstream fileConfig(filename.c_str());
     std::stringstream buffer;
@@ -75,6 +85,7 @@ Config::Config(int argc, char** argv) {
     while (std::getline(fileConfig, line)) buffer << line << "\r\n";
 
     struct_mapping::map_json_to_struct(*this, buffer);
+    this->TAM = this->nTuples * this->nFeatures;
 
     /************ Check if size of data is divisible by the number of processors ***********/
     check(nTuples * nFeatures % MPI::COMM_WORLD.Get_size(), "%s\n", ERROR_NPROCESS);
@@ -90,7 +101,10 @@ std::ostream& operator<<(std::ostream& os, const Config& o) {
     os << "MRMR: " << o.MRMR << std::endl;
     os << "nTuples: " << o.nTuples << std::endl;
     os << "nFeatures: " << o.nFeatures << std::endl;
+    os << "TAM: " << o.TAM << std::endl;
     os << "nClasses: " << o.nClasses << std::endl;
+    os << "normalize: " << o.normalize << std::endl;
+    os << "maxFeatures: " << o.maxFeatures << std::endl;
     return os;
 }
 

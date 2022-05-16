@@ -27,6 +27,8 @@ const char* const ERROR_PARSE_ARGUMENTS =
     "Error: Missing required value of the argument or nothing to parse, please use -h for more information.";
 const char* const ERROR_NPROCESS =
     "Error: Number of data ntuple * nfeatures is not divisible by the number of processors";
+const char* const ERROR_MODE =
+    "Error: -mode must be hetero or homo";
 
 /******************************** Structures ******************************/
 
@@ -39,9 +41,14 @@ typedef struct Config {
     std::string dbDataTraining;   /**< Filename of the dataset to train */
     std::string dbLabelsTraining; /**< Filename of the dataset labels to train */
     std::string MRMR;             /**< Filename of the MRMR file */
-    unsigned int nTuples;         /**< Number of tuples of the dataset */
-    unsigned int nFeatures;       /**< Number of features of the dataset */
+    std::string mode;             /**< Mode of the program, hetero or homo platforms */
+    long nTuples;                 /**< Number of tuples of the dataset */
+    long nFeatures;               /**< Number of features of the dataset */
+    long TAM;                     /**< Number of tuples * number of features */
     unsigned int nClasses;        /**< Number of classes of the dataset */
+    bool normalize;               /**< Flag to normalize the dataset */
+    bool sortingByMRMR;           /**< Flag to sort the dataset by MRMR */
+    long maxFeatures;             /**< Maximum number of features to use */
 
     /********************************* Methods ********************************/
     /**

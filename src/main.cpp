@@ -54,69 +54,74 @@ int main(int argc, char* argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Get_processor_name(processor_name, &namelen);
 
+    // Initialize the configuration
     Config config(argc, argv);
-    const unsigned int TAM = config.nTuples * config.nFeatures;
 
-    vector<float> dataTraining, dataTest;
-    vector<unsigned int> labelsTraining, labelsTest, MRMR;
+    // Mode homo for homogeneous platforms, static balancing
+    if (config.mode == "homo") {
+        // Mode homo for homogeneous platforms, static balancing
+        // In this configuration each process read own data
+        vector<float> dataTraining, dataTest;
+        vector<unsigned int> labelsTraining, labelsTest, MRMR;
+        dataTraining.resize(config.TAM);
+        dataTest.resize(config.TAM);
+        labelsTraining.resize(config.nTuples);
+        labelsTest.resize(config.nTuples);
 
-    dataTraining.resize(TAM);
-    dataTest.resize(TAM);
-    labelsTraining.resize(config.nTuples);
-    labelsTest.resize(config.nTuples);
+        // Present each process with mpi
+        printf("\nHello from process %d/%d on %s\n", rank, size, processor_name);
 
-    // Present each process with mpi
-    printf("\nHybrid: Hello from process %d/%d on %s\n", rank, size, processor_name);
-
-    double start, end;
-    if (!rank) {
         // 1. Read data from files
-        start = MPI_Wtime();
         readDataFromFiles(dataTraining, dataTest, labelsTraining, labelsTest, MRMR, config);
-        end = MPI_Wtime();
-        cout << "Time to read data: " << end - start << endl;
 
         // 2. Sorting by best features (MRMR), get best scores
+        if (config.sortingByMRMR) {
+            sortFeaturesByMRMR(dataTraining, dataTest, MRMR, config);
+        }
+
+        // dataTraining bcast to all processes, no hace falta ya que cada proceso va a leer su propio archivo
+        // MPI_Bcast(&dataTraining[0], dataTraining.size(), MPI_FLOAT, 0, MPI_COMM_WORLD);
+        // MPI_Bcast(&dataTest[0], dataTest.size(), MPI_FLOAT, 0, MPI_COMM_WORLD);
+        // MPI_Bcast(&labelsTraining[0], labelsTraining.size(), MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+        // MPI_Bcast(&labelsTest[0], labelsTest.size(), MPI_UNSIGNED, 0, MPI_COMM_WORLD);
+
+        // 3. Get the best k and number of features to use, floor(sqrt(config.nTuples)) // Recommended
+        double start, end;
         start = MPI_Wtime();
-        sortFeaturesByMRMR(dataTraining, dataTest, MRMR, config);
+        pair<unsigned int, unsigned int> bestHyperParams = getBestHyperParams(1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config);
         end = MPI_Wtime();
-        cout << "Time to sort data with MRMR: " << end - start << endl;
+
+        if (!rank) {
+            cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << endl;
+            cout << "Time getBestHyperParams: " << end - start << endl;
+            // 4. To finalize get the score of the best k and number of features
+            start = MPI_Wtime();
+            pair<vector<unsigned int>, unsigned int> scoreTest = getScoreKNN(bestHyperParams.first, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, bestHyperParams.second, config);
+            pair<vector<unsigned int>, unsigned int> scoreTraining = getScoreKNN(bestHyperParams.first, dataTraining, dataTraining, labelsTraining, labelsTraining, euclideanDistance, bestHyperParams.second, config);
+            end = MPI_Wtime();
+            cout << "Time KNN: " << end - start << endl;
+
+            // 5. Get Confusion Matrix for test
+            vector<vector<unsigned int>> confusionMatrixTest = getConfusionMatrix(labelsTest, scoreTest.first, config.nClasses);
+            cout << "Confusion Matrix Test: " << endl;
+            printMatrix(confusionMatrixTest);
+
+            // vectorOfVectorData<unsigned int> confusionMatrixTraining = getConfusionMatrix(labelsTraining, scoreTraining.first, config.nClasses);
+            // cout << "Confusion Matrix Training: " << endl;
+            // printMatrix(confusionMatrixTraining);
+
+            cout << "Accuracy of K-NN classifier on training set: " << ((float)scoreTraining.second / (float)config.nTuples) << endl;
+            cout << "Accuracy of K-NN classifier on test set: " << ((float)scoreTest.second / (float)config.nTuples) << endl;
+        }
+    } else if (config.mode == "hetero") {
+        // Mode hetero for heterogeneous platforms, dynamic balancing
+        // In this configuration, master process reads the data from files, and send it to all processes
+        // Master
+        if (!rank) {
+        } else {
+            // Slave
+        }
+
+        MPI_Finalize();
+        return EXIT_SUCCESS;
     }
-
-    // dataTraining bcast to all processes
-    MPI_Bcast(&dataTraining[0], dataTraining.size(), MPI_FLOAT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&dataTest[0], dataTest.size(), MPI_FLOAT, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&labelsTraining[0], labelsTraining.size(), MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-    MPI_Bcast(&labelsTest[0], labelsTest.size(), MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-
-    // 3. Get the best k and number of features to use, floor(sqrt(config.nTuples)) // Recommended
-    start = MPI_Wtime();
-    pair<unsigned int, unsigned int> bestHyperParams = getBestHyperParams(1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config);
-    end = MPI_Wtime();
-
-    if (!rank) {
-        cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << endl;
-        cout << "Time getBestHyperParams: " << end - start << endl;
-        // 4. To finalize get the score of the best k and number of features
-        start = MPI_Wtime();
-        pair<vector<unsigned int>, unsigned int> scoreTest = getScoreKNN(bestHyperParams.first, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, bestHyperParams.second, config);
-        pair<vector<unsigned int>, unsigned int> scoreTraining = getScoreKNN(bestHyperParams.first, dataTraining, dataTraining, labelsTraining, labelsTraining, euclideanDistance, bestHyperParams.second, config);
-        end = MPI_Wtime();
-        cout << "Time KNN: " << end - start << endl;
-
-        // 5. Get Confusion Matrix for test
-        vector<vector<unsigned int>> confusionMatrixTest = getConfusionMatrix(labelsTest, scoreTest.first, config.nClasses);
-        cout << "Confusion Matrix Test: " << endl;
-        printMatrix(confusionMatrixTest);
-
-        // vectorOfVectorData<unsigned int> confusionMatrixTraining = getConfusionMatrix(labelsTraining, scoreTraining.first, config.nClasses);
-        // cout << "Confusion Matrix Training: " << endl;
-        // printMatrix(confusionMatrixTraining);
-
-        cout << "Accuracy of K-NN classifier on training set: " << ((float)scoreTraining.second / (float)config.nTuples) << endl;
-        cout << "Accuracy of K-NN classifier on test set: " << ((float)scoreTest.second / (float)config.nTuples) << endl;
-    }
-
-    MPI_Finalize();
-    return EXIT_SUCCESS;
-}

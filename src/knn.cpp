@@ -105,8 +105,7 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
     int rank = MPI::COMM_WORLD.Get_rank();
     int size = MPI::COMM_WORLD.Get_size();
 
-    unsigned int sizePerProcess = 500 / size;
-
+    unsigned int sizePerProcess = config.maxFeatures / size;
     for (unsigned int f = 1 + rank; f < sizePerProcess; f += size) {
         // bar.progress(f, sizePerProcess);
         std::vector<unsigned int> vectorAccuracies(maxValueK - minValueK + 1, 0);
@@ -155,7 +154,6 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
     }
 
     return std::make_pair(bestKs[indexBestAccuracy], bestNFeaturess[indexBestAccuracy]);
-
     // bar.finish();
 }
 

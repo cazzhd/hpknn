@@ -23,6 +23,7 @@ COMPILER	:= $(if $(filter true,${mpi}),$(MPICXX),$(CXX))
 # EXECUTOR	:= $(if $(filter true,${mpi}),$(MPIEXEC),)
 NP			:= $(if ${np},-np $(np),)
 NT			:= $(if ${nt},-x OMP_NUM_THREADS=$(nt),)
+MODE		:= $(if ${mode},-mode $(mode),)
 
 CXXFLAGS	:= -std=c++17 -Wall -g
 OPT 		:= -O2 -funroll-loops
@@ -117,8 +118,8 @@ clean:
 	@echo "\e[31mCleanup complete!"
 
 run: all
-	@echo "\e[0mExecuting $(OUTPUTMAIN)...\n$(NP) $(NT)\nOUTPUT:\n"
-	@$(MPIEXEC) $(NP) $(NT) ./$(OUTPUTMAIN) -conf config.json
+	@echo "\e[0mExecuting $(OUTPUTMAIN)...\n $(MODE) $(NP) $(NT)\nOUTPUT:\n"
+	@$(MPIEXEC) $(NP) $(NT) ./$(OUTPUTMAIN) $(MODE) -conf config.json
 
 info:
 	@echo "\e[36mMade by Francisco Rodríguez Jiménez (cazz@correo.ugr.es)\nHpknn (c) 2015 EFFICOMP"

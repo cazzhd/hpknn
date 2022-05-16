@@ -47,6 +47,17 @@ std::pair<T, T> min_max_value(const std::vector<std::vector<T>> &data) {
 
 template <typename T>
 /**
+ * @brief Function that return the maximun and minimum value of a vector
+ * @param data The vector to search
+ * @return std::pair<T, T> The pair of the maximun and minimum value
+ */
+std::pair<T, T> min_max_value(const std::vector<T> &data) {
+    return std::make_pair(*min_element(data.begin(), data.end()),
+                          *max_element(data.begin(), data.end()));
+}
+
+template <typename T>
+/**
  * @brief Function that normalize the data of a vector
  * @param data The vector to normalize
  * @return std::vector<std::vector<T>> The normalized vector
@@ -63,6 +74,24 @@ std::vector<std::vector<T>> normalize(const std::vector<std::vector<T>> &data) {
         }
         normalizedData.push_back(normalizedRow);
     }
+    return normalizedData;
+}
+
+template <typename T>
+/**
+ * @brief Function that normalize the data of a vector
+ * @param data The vector to normalize
+ * @return std::vector<T> The normalized vector
+ */
+std::vector<T> normalize(const std::vector<T> &data) {
+    std::vector<T> normalizedData;
+    std::pair<T, T> minMaxValue = min_max_value(data);
+
+    for (const auto &value : data) {
+        T normalizedValue = (value - minMaxValue.first) / (minMaxValue.second - minMaxValue.first);
+        normalizedData.push_back(normalizedValue);
+    }
+
     return normalizedData;
 }
 
@@ -135,11 +164,11 @@ void readDataFromFiles(std::vector<float> &dataTraining,
     {
 #pragma omp section
         {
-            dataTraining = csvReader.readData<float>(config.dbDataTraining);
+            dataTraining = config.normalize ? normalize(csvReader.readData<float>(config.dbDataTraining)) : csvReader.readData<float>(config.dbDataTraining);
         }
 #pragma omp section
         {
-            dataTest = csvReader.readData<float>(config.dbDataTest);
+            dataTest = config.normalize ? normalize(csvReader.readData<float>(config.dbDataTest)) : csvReader.readData<float>(config.dbDataTest);
         }
 #pragma omp section
         {

@@ -6,5 +6,8 @@
     "MRMR": "db/essex104_csv/MRMR104.csv",
     "nTuples": 178,
     "nFeatures": 3600,
-    "nClasses": 3
+    "nClasses": 3,
+    "normalize": true,
+    "sortingByMRMR": true,
+    "maxFeatures": 500
 }
