@@ -9,7 +9,7 @@
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/bin/hpknn",
-			"args": ["-conf", "${workspaceFolder}/config.json"],
+			"args": ["-mode", "homo", "-conf", "${workspaceFolder}/config.json"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
 			"environment": [],

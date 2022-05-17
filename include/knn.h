@@ -97,18 +97,45 @@ unsigned int KNN(int k,
  * @param config The configuration of the algorithm
  * @return Pair with the best K and the best numbers of predictions
  */
-std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValueK,
-                                                         unsigned short maxValueK,
-                                                         std::vector<float>& dataTraining,
-                                                         std::vector<float>& dataTest,
-                                                         std::vector<unsigned int>& labelsTraining,
-                                                         std::vector<unsigned int>& labelsTest,
-                                                         float (*distanceFunction)(std::vector<float>&,
-                                                                                   std::vector<float>&,
-                                                                                   unsigned int,
-                                                                                   unsigned int,
-                                                                                   unsigned int),
-                                                         const Config& config);
+std::pair<unsigned int, unsigned int> getBestHyperParamsHomogeneous(unsigned short minValueK,
+                                                                    unsigned short maxValueK,
+                                                                    std::vector<float>& dataTraining,
+                                                                    std::vector<float>& dataTest,
+                                                                    std::vector<unsigned int>& labelsTraining,
+                                                                    std::vector<unsigned int>& labelsTest,
+                                                                    float (*distanceFunction)(std::vector<float>&,
+                                                                                              std::vector<float>&,
+                                                                                              unsigned int,
+                                                                                              unsigned int,
+                                                                                              unsigned int),
+                                                                    const Config& config);
+
+/**
+ * @brief Get the Best K object
+ * @param ptrFeatures The pointer that contents the number of feature to initialize for until ptrFeatures + chunkSize
+ * @param minValueK The minimum value of K with starts
+ * @param maxValueK The maximum value of K with ends
+ * @param dataTraining The training data
+ * @param dataTest The Point to find the nearest neighbors
+ * @param labelsTraining The labels of the training data
+ * @param labelsTest The labels of the test data
+ * @param distanceFunction The distance function to use
+ * @param config The configuration of the algorithm
+ * @return Vector with the best K, best features, and accuracy
+ */
+std::vector<unsigned int> getBestHyperParamsHeterogeneous(unsigned long ptrFeatures,
+                                                          unsigned short minValueK,
+                                                          unsigned short maxValueK,
+                                                          std::vector<float>& dataTraining,
+                                                          std::vector<float>& dataTest,
+                                                          std::vector<unsigned int>& labelsTraining,
+                                                          std::vector<unsigned int>& labelsTest,
+                                                          float (*distanceFunction)(std::vector<float>&,
+                                                                                    std::vector<float>&,
+                                                                                    unsigned int,
+                                                                                    unsigned int,
+                                                                                    unsigned int),
+                                                          const Config& config);
 
 /**
  * @brief Get the Confusion Matrix object

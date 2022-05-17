@@ -9,5 +9,6 @@
     "nClasses": 3,
     "normalize": true,
     "sortingByMRMR": true,
-    "maxFeatures": 500
+    "maxFeatures": 500,
+    "chunkSize": 100
 }

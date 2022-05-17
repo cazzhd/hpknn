@@ -83,18 +83,18 @@ unsigned int KNN(int k,
     return getMostFrequentClass(k, distances);
 }
 
-std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValueK,
-                                                         unsigned short maxValueK,
-                                                         std::vector<float>& dataTraining,
-                                                         std::vector<float>& dataTest,
-                                                         std::vector<unsigned int>& labelsTraining,
-                                                         std::vector<unsigned int>& labelsTest,
-                                                         float (*distanceFunction)(std::vector<float>&,
-                                                                                   std::vector<float>&,
-                                                                                   unsigned int,
-                                                                                   unsigned int,
-                                                                                   unsigned int),
-                                                         const Config& config) {
+std::pair<unsigned int, unsigned int> getBestHyperParamsHomogeneous(unsigned short minValueK,
+                                                                    unsigned short maxValueK,
+                                                                    std::vector<float>& dataTraining,
+                                                                    std::vector<float>& dataTest,
+                                                                    std::vector<unsigned int>& labelsTraining,
+                                                                    std::vector<unsigned int>& labelsTest,
+                                                                    float (*distanceFunction)(std::vector<float>&,
+                                                                                              std::vector<float>&,
+                                                                                              unsigned int,
+                                                                                              unsigned int,
+                                                                                              unsigned int),
+                                                                    const Config& config) {
     unsigned int bestK = 0;
     unsigned int bestNFeatures = 0;
     unsigned int bestAccuracy = 0;
@@ -154,6 +154,53 @@ std::pair<unsigned int, unsigned int> getBestHyperParams(unsigned short minValue
     }
 
     return std::make_pair(bestKs[indexBestAccuracy], bestNFeaturess[indexBestAccuracy]);
+    // bar.finish();
+}
+
+std::vector<unsigned int> getBestHyperParamsHeterogeneous(unsigned long ptrFeatures,
+                                                          unsigned short minValueK,
+                                                          unsigned short maxValueK,
+                                                          std::vector<float>& dataTraining,
+                                                          std::vector<float>& dataTest,
+                                                          std::vector<unsigned int>& labelsTraining,
+                                                          std::vector<unsigned int>& labelsTest,
+                                                          float (*distanceFunction)(std::vector<float>&,
+                                                                                    std::vector<float>&,
+                                                                                    unsigned int,
+                                                                                    unsigned int,
+                                                                                    unsigned int),
+                                                          const Config& config) {
+    unsigned int bestK = 0;
+    unsigned int bestNFeatures = 0;
+    unsigned int bestAccuracy = 0;
+    // tqdm bar;
+    // bar.set_theme_braille();
+
+    for (unsigned int f = 1 + ptrFeatures; f < ptrFeatures + config.chunkSize; ++f) {
+        // bar.progress(f, sizePerProcess);
+        std::vector<unsigned int> vectorAccuracies(maxValueK - minValueK + 1, 0);
+#pragma omp parallel for schedule(dynamic)
+        for (unsigned int i = 0; i < config.nTuples; ++i) {
+            std::vector<std::pair<float, unsigned int>> distances = getDistances(dataTraining, dataTest, labelsTraining, distanceFunction, i * config.nFeatures, f, config);
+            for (unsigned int k = minValueK; k <= maxValueK; ++k) {
+                unsigned int labelPredicted = getMostFrequentClass(k, distances);
+                if (labelPredicted == labelsTest[i]) {
+                    vectorAccuracies[k - minValueK]++;
+                }
+            }
+        }
+// Iterate for vectorAccuracies
+#pragma omp parallel for schedule(dynamic)
+        for (unsigned int i = 0; i < vectorAccuracies.size(); ++i) {
+            if (vectorAccuracies[i] > bestAccuracy) {
+                bestAccuracy = vectorAccuracies[i];
+                bestK = i + minValueK;
+                bestNFeatures = f;
+            }
+        }
+    }
+
+    return std::vector<unsigned int>{bestK, bestNFeatures, bestAccuracy};
     // bar.finish();
 }
 

@@ -49,6 +49,7 @@ typedef struct Config {
     bool normalize;               /**< Flag to normalize the dataset */
     bool sortingByMRMR;           /**< Flag to sort the dataset by MRMR */
     long maxFeatures;             /**< Maximum number of features to use */
+    unsigned int chunkSize;       /**< Size of the chunk to send to the slaves */
 
     /********************************* Methods ********************************/
     /**

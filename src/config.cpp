@@ -78,6 +78,7 @@ Config::Config(int argc, char** argv) {
     struct_mapping::reg(&Config::normalize, "normalize");
     struct_mapping::reg(&Config::sortingByMRMR, "sortingByMRMR");
     struct_mapping::reg(&Config::maxFeatures, "maxFeatures");
+    struct_mapping::reg(&Config::chunkSize, "chunkSize");
 
     std::ifstream fileConfig(filename.c_str());
     std::stringstream buffer;
@@ -105,6 +106,7 @@ std::ostream& operator<<(std::ostream& os, const Config& o) {
     os << "nClasses: " << o.nClasses << std::endl;
     os << "normalize: " << o.normalize << std::endl;
     os << "maxFeatures: " << o.maxFeatures << std::endl;
+    os << "chunkSize: " << o.chunkSize << std::endl;
     return os;
 }
 

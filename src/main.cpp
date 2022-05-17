@@ -36,7 +36,104 @@
 #include "knn.h"
 #include "util.h"
 
+#define TAG_RESULT 0
+#define TAG_ASK_FOR_JOB 1
+#define TAG_JOB_DATA 2
+#define TAG_STOP 3
+
 using namespace std;
+
+/**
+ * @brief master function executed by the master process
+ * managing the slaves with send jobs and receiving results using dinamyc balancing
+ * @param config configuration parameters
+ */
+void master(const Config& config) {
+    unsigned int chunkProcessed = 0;
+    unsigned int bestAccuracy = 0;
+    pair<unsigned int, unsigned int> bestHyperParamsGlobal = make_pair(0, 0);
+    vector<unsigned int> bestHyperParamsLocal;
+    bestHyperParamsLocal.resize(3);
+    MPI_Status status, status2;
+
+    // while (/* there are jobs unprocessed */ || /* there are slaves still working on jobs */) {
+    while (true) {
+        // Wait for incoming slave message
+        printf("Master wait for request slave\n");
+        MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+
+        // Store rank of the slave who sent the message
+        int slave_rank = status.MPI_SOURCE;
+        if (status.MPI_TAG == TAG_ASK_FOR_JOB) {
+            printf("Master recive request\n");
+            // If the slave is ready to receive a job, send it one
+            if (chunkProcessed < config.maxFeatures) {
+                printf("Master send job: %d \n", chunkProcessed);
+                MPI_Send(&chunkProcessed, 1, MPI_UNSIGNED, slave_rank, TAG_JOB_DATA, MPI_COMM_WORLD);
+                chunkProcessed += config.chunkSize;
+            } else {
+                // Send stop message to the slave
+                printf("Master send stop\n");
+                MPI_Send(NULL, 0, MPI_INT, slave_rank, TAG_STOP, MPI_COMM_WORLD);
+            }
+        } else {
+            // If the slave sent a result, process it
+            printf("Master recive result\n");
+            MPI_Recv(&bestHyperParamsLocal, 3, MPI_UNSIGNED, slave_rank, TAG_RESULT, MPI_COMM_WORLD, &status2);
+            if (bestHyperParamsLocal[2] > bestAccuracy) {
+                bestHyperParamsGlobal = make_pair(bestHyperParamsLocal[0], bestHyperParamsLocal[1]);
+                bestAccuracy = bestHyperParamsLocal[2];
+            }
+            printf("Master best hyperparams: %d:%d with accuracy: %d\n", bestHyperParamsGlobal.first,
+                   bestHyperParamsGlobal.second, bestAccuracy);
+        }
+    }
+}
+
+/**
+ * @brief slave function executed by the slave processes
+ * receiving jobs and sending results
+ * @param dataTraining data for training
+ * @param dataTest data for testing
+ * @param labelsTraining labels for training
+ * @param labelsTest labels for testing
+ * @param config configuration parameters
+ */
+void slave(vector<float>& dataTraining,
+           vector<float>& dataTest,
+           vector<unsigned int>& labelsTraining,
+           vector<unsigned int>& labelsTest,
+           const Config& config) {
+    bool hasWork = true;
+    unsigned int chunkToProcess = 0;
+    MPI_Status status, status2;
+
+    do {
+        // First send message to master to ask for a job, and wait for job
+        printf("Slave asking for a job\n");
+        MPI_Send(NULL, 0, MPI_INT, 0, TAG_ASK_FOR_JOB, MPI_COMM_WORLD);
+        printf("Slave wait for job\n");
+        MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+
+        if (status.MPI_TAG == TAG_JOB_DATA) {
+            // Work with data received, process it
+            MPI_Recv(&chunkToProcess, 1, MPI_UNSIGNED, 0, TAG_JOB_DATA, MPI_COMM_WORLD, &status2);
+            printf("Slave recive job %d\n", chunkToProcess);
+            vector<unsigned int> bestHyperParamsLocal = getBestHyperParamsHeterogeneous(chunkToProcess, 1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config);
+            // Print best hyperparameters
+            printf("Best hyperparameters: %d %d %d\n", bestHyperParamsLocal[0], bestHyperParamsLocal[1], bestHyperParamsLocal[2]);
+            // Send result to master
+            printf("Slave send result to master %d\n", chunkToProcess);
+            MPI_Send(&bestHyperParamsLocal, bestHyperParamsLocal.size(), MPI_UNSIGNED, 0, TAG_RESULT, MPI_COMM_WORLD);
+            printf("Slave send success %d\n", chunkToProcess);
+        } else {
+            printf("Slave recive stop\n");
+            // If the master sent a stop message, stop
+            MPI_Recv(NULL, 0, MPI_INT, 0, TAG_STOP, MPI_COMM_WORLD, &status2);
+            hasWork = !hasWork;
+        }
+    } while (hasWork);
+}
 
 /********************************* Main ********************************/
 /**
@@ -57,38 +154,27 @@ int main(int argc, char* argv[]) {
     // Initialize the configuration
     Config config(argc, argv);
 
+    // Vars for use in both modes
+    vector<float> dataTraining, dataTest;
+    vector<unsigned int> labelsTraining, labelsTest, MRMR;
+    double start, end;
+
+    // 1. Read data from files
+    readDataFromFiles(dataTraining, dataTest, labelsTraining, labelsTest, MRMR, config);
+
+    // 2. Sorting by best features (MRMR), get best scores
+    if (config.sortingByMRMR) {
+        sortFeaturesByMRMR(dataTraining, dataTest, MRMR, config);
+    }
+
     // Mode homo for homogeneous platforms, static balancing
     if (config.mode == "homo") {
-        // Mode homo for homogeneous platforms, static balancing
-        // In this configuration each process read own data
-        vector<float> dataTraining, dataTest;
-        vector<unsigned int> labelsTraining, labelsTest, MRMR;
-        dataTraining.resize(config.TAM);
-        dataTest.resize(config.TAM);
-        labelsTraining.resize(config.nTuples);
-        labelsTest.resize(config.nTuples);
-
         // Present each process with mpi
         printf("\nHello from process %d/%d on %s\n", rank, size, processor_name);
 
-        // 1. Read data from files
-        readDataFromFiles(dataTraining, dataTest, labelsTraining, labelsTest, MRMR, config);
-
-        // 2. Sorting by best features (MRMR), get best scores
-        if (config.sortingByMRMR) {
-            sortFeaturesByMRMR(dataTraining, dataTest, MRMR, config);
-        }
-
-        // dataTraining bcast to all processes, no hace falta ya que cada proceso va a leer su propio archivo
-        // MPI_Bcast(&dataTraining[0], dataTraining.size(), MPI_FLOAT, 0, MPI_COMM_WORLD);
-        // MPI_Bcast(&dataTest[0], dataTest.size(), MPI_FLOAT, 0, MPI_COMM_WORLD);
-        // MPI_Bcast(&labelsTraining[0], labelsTraining.size(), MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-        // MPI_Bcast(&labelsTest[0], labelsTest.size(), MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-
         // 3. Get the best k and number of features to use, floor(sqrt(config.nTuples)) // Recommended
-        double start, end;
         start = MPI_Wtime();
-        pair<unsigned int, unsigned int> bestHyperParams = getBestHyperParams(1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config);
+        pair<unsigned int, unsigned int> bestHyperParams = getBestHyperParamsHomogeneous(1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config);
         end = MPI_Wtime();
 
         if (!rank) {
@@ -106,22 +192,18 @@ int main(int argc, char* argv[]) {
             cout << "Confusion Matrix Test: " << endl;
             printMatrix(confusionMatrixTest);
 
-            // vectorOfVectorData<unsigned int> confusionMatrixTraining = getConfusionMatrix(labelsTraining, scoreTraining.first, config.nClasses);
-            // cout << "Confusion Matrix Training: " << endl;
-            // printMatrix(confusionMatrixTraining);
-
             cout << "Accuracy of K-NN classifier on training set: " << ((float)scoreTraining.second / (float)config.nTuples) << endl;
             cout << "Accuracy of K-NN classifier on test set: " << ((float)scoreTest.second / (float)config.nTuples) << endl;
         }
     } else if (config.mode == "hetero") {
         // Mode hetero for heterogeneous platforms, dynamic balancing
-        // In this configuration, master process reads the data from files, and send it to all processes
-        // Master
         if (!rank) {
+            master(config);
         } else {
-            // Slave
+            slave(dataTraining, dataTest, labelsTraining, labelsTest, config);
         }
-
-        MPI_Finalize();
-        return EXIT_SUCCESS;
     }
+
+    MPI_Finalize();
+    return EXIT_SUCCESS;
+}

@@ -118,7 +118,7 @@ clean:
 	@echo "\e[31mCleanup complete!"
 
 run: all
-	@echo "\e[0mExecuting $(OUTPUTMAIN)...\n $(MODE) $(NP) $(NT)\nOUTPUT:\n"
+	@echo "\e[0mExecuting $(OUTPUTMAIN)...\n $(MODE) $(NP) $(NT) -conf config.json\nOUTPUT:\n"
 	@$(MPIEXEC) $(NP) $(NT) ./$(OUTPUTMAIN) $(MODE) -conf config.json
 
 info:
