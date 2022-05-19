@@ -137,7 +137,7 @@ std::pair<unsigned int, unsigned int> getBestHyperParamsHomogeneous(unsigned sho
     std::vector<unsigned int> bestAccuracies(size, 0);
 
     // Each process print bestK and bestNFeatures
-    printf("Process %d: bestK = %d, bestNFeatures = %d, bestAccuracy = %d\n", rank, bestK, bestNFeatures, bestAccuracy);
+    // printf("Process %d: bestK = %d, bestNFeatures = %d, bestAccuracy = %d\n", rank, bestK, bestNFeatures, bestAccuracy);
 
     MPI_Gather(&bestK, 1, MPI_UNSIGNED, bestKs.data(), 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
     MPI_Gather(&bestNFeatures, 1, MPI_UNSIGNED, bestNFeaturess.data(), 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);

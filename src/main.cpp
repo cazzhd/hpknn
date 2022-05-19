@@ -47,47 +47,58 @@ using namespace std;
  * @brief master function executed by the master process
  * managing the slaves with send jobs and receiving results using dinamyc balancing
  * @param config configuration parameters
+ * @return pair of the best k and the best accuracy
  */
-void master(const Config& config) {
+pair<unsigned int, unsigned int> master(const Config& config) {
     unsigned int chunkProcessed = 0;
     unsigned int bestAccuracy = 0;
     pair<unsigned int, unsigned int> bestHyperParamsGlobal = make_pair(0, 0);
     vector<unsigned int> bestHyperParamsLocal;
     bestHyperParamsLocal.resize(3);
-    MPI_Status status, status2;
+    MPI_Status status;
+    unsigned int slavesDone = 0;
+    unsigned int totalSlaves = MPI::COMM_WORLD.Get_size() - 1;
 
     // while (/* there are jobs unprocessed */ || /* there are slaves still working on jobs */) {
-    while (true) {
+    while (slavesDone != totalSlaves) {
         // Wait for incoming slave message
-        printf("Master wait for request slave\n");
+        // printf("Master wait for request slave\n");
+        // printf("Slaves done: %d/%d\n", slavesDone, totalSlaves);
         MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-
         // Store rank of the slave who sent the message
         int slave_rank = status.MPI_SOURCE;
+
         if (status.MPI_TAG == TAG_ASK_FOR_JOB) {
-            printf("Master recive request\n");
+            // printf("Master recive request\n");
             // If the slave is ready to receive a job, send it one
+            MPI_Recv(NULL, 0, MPI_INT, slave_rank, TAG_ASK_FOR_JOB, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             if (chunkProcessed < config.maxFeatures) {
-                printf("Master send job: %d \n", chunkProcessed);
+                // printf("Master send job: %d \n", chunkProcessed);
                 MPI_Send(&chunkProcessed, 1, MPI_UNSIGNED, slave_rank, TAG_JOB_DATA, MPI_COMM_WORLD);
                 chunkProcessed += config.chunkSize;
             } else {
                 // Send stop message to the slave
-                printf("Master send stop\n");
+                // printf("Master send stop\n");
                 MPI_Send(NULL, 0, MPI_INT, slave_rank, TAG_STOP, MPI_COMM_WORLD);
             }
-        } else {
+        } else if (status.MPI_TAG == TAG_RESULT) {
             // If the slave sent a result, process it
-            printf("Master recive result\n");
-            MPI_Recv(&bestHyperParamsLocal, 3, MPI_UNSIGNED, slave_rank, TAG_RESULT, MPI_COMM_WORLD, &status2);
+            // printf("Master recive result\n");
+            MPI_Recv(&bestHyperParamsLocal[0], 3, MPI_UNSIGNED, slave_rank, TAG_RESULT, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             if (bestHyperParamsLocal[2] > bestAccuracy) {
                 bestHyperParamsGlobal = make_pair(bestHyperParamsLocal[0], bestHyperParamsLocal[1]);
                 bestAccuracy = bestHyperParamsLocal[2];
             }
-            printf("Master best hyperparams: %d:%d with accuracy: %d\n", bestHyperParamsGlobal.first,
-                   bestHyperParamsGlobal.second, bestAccuracy);
+            // printf("Master best hyperparams: %d:%d with accuracy: %d\n", bestHyperParamsGlobal.first,
+            //        bestHyperParamsGlobal.second, bestAccuracy);
+        } else {
+            MPI_Recv(NULL, 0, MPI_INT, slave_rank, TAG_STOP, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            slavesDone++;
+            // printf("Master slave %d done FINISH\n", slavesDone);
         }
     }
+
+    return bestHyperParamsGlobal;
 }
 
 /**
@@ -106,30 +117,31 @@ void slave(vector<float>& dataTraining,
            const Config& config) {
     bool hasWork = true;
     unsigned int chunkToProcess = 0;
-    MPI_Status status, status2;
+    MPI_Status status;
 
     do {
         // First send message to master to ask for a job, and wait for job
-        printf("Slave asking for a job\n");
+        // printf("Slave asking for a job\n");
         MPI_Send(NULL, 0, MPI_INT, 0, TAG_ASK_FOR_JOB, MPI_COMM_WORLD);
-        printf("Slave wait for job\n");
+        // printf("Slave wait for job\n");
         MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 
         if (status.MPI_TAG == TAG_JOB_DATA) {
             // Work with data received, process it
-            MPI_Recv(&chunkToProcess, 1, MPI_UNSIGNED, 0, TAG_JOB_DATA, MPI_COMM_WORLD, &status2);
-            printf("Slave recive job %d\n", chunkToProcess);
+            MPI_Recv(&chunkToProcess, 1, MPI_INT, 0, TAG_JOB_DATA, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            // printf("Slave recive job %d\n", chunkToProcess);
             vector<unsigned int> bestHyperParamsLocal = getBestHyperParamsHeterogeneous(chunkToProcess, 1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config);
             // Print best hyperparameters
-            printf("Best hyperparameters: %d %d %d\n", bestHyperParamsLocal[0], bestHyperParamsLocal[1], bestHyperParamsLocal[2]);
+            // printf("Best hyperparameters: %d %d %d\n", bestHyperParamsLocal[0], bestHyperParamsLocal[1], bestHyperParamsLocal[2]);
             // Send result to master
-            printf("Slave send result to master %d\n", chunkToProcess);
-            MPI_Send(&bestHyperParamsLocal, bestHyperParamsLocal.size(), MPI_UNSIGNED, 0, TAG_RESULT, MPI_COMM_WORLD);
-            printf("Slave send success %d\n", chunkToProcess);
+            // printf("Slave send result to master %d\n", chunkToProcess);
+            MPI_Send(&bestHyperParamsLocal[0], bestHyperParamsLocal.size(), MPI_UNSIGNED, 0, TAG_RESULT, MPI_COMM_WORLD);
+            // printf("Slave send success %d\n", chunkToProcess);
         } else {
-            printf("Slave recive stop\n");
+            // printf("Slave recive stop\n");
             // If the master sent a stop message, stop
-            MPI_Recv(NULL, 0, MPI_INT, 0, TAG_STOP, MPI_COMM_WORLD, &status2);
+            MPI_Recv(NULL, 0, MPI_INT, 0, TAG_STOP, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Send(NULL, 0, MPI_INT, 0, TAG_STOP, MPI_COMM_WORLD);
             hasWork = !hasWork;
         }
     } while (hasWork);
@@ -157,6 +169,7 @@ int main(int argc, char* argv[]) {
     // Vars for use in both modes
     vector<float> dataTraining, dataTest;
     vector<unsigned int> labelsTraining, labelsTest, MRMR;
+    pair<unsigned int, unsigned int> bestHyperParams;
     double start, end;
 
     // 1. Read data from files
@@ -170,38 +183,41 @@ int main(int argc, char* argv[]) {
     // Mode homo for homogeneous platforms, static balancing
     if (config.mode == "homo") {
         // Present each process with mpi
-        printf("\nHello from process %d/%d on %s\n", rank, size, processor_name);
+        // printf("\nHello from process %d/%d on %s\n", rank, size, processor_name);
 
         // 3. Get the best k and number of features to use, floor(sqrt(config.nTuples)) // Recommended
         start = MPI_Wtime();
-        pair<unsigned int, unsigned int> bestHyperParams = getBestHyperParamsHomogeneous(1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config);
+        bestHyperParams = getBestHyperParamsHomogeneous(1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config);
         end = MPI_Wtime();
 
-        if (!rank) {
-            cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << endl;
-            cout << "Time getBestHyperParams: " << end - start << endl;
-            // 4. To finalize get the score of the best k and number of features
-            start = MPI_Wtime();
-            pair<vector<unsigned int>, unsigned int> scoreTest = getScoreKNN(bestHyperParams.first, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, bestHyperParams.second, config);
-            pair<vector<unsigned int>, unsigned int> scoreTraining = getScoreKNN(bestHyperParams.first, dataTraining, dataTraining, labelsTraining, labelsTraining, euclideanDistance, bestHyperParams.second, config);
-            end = MPI_Wtime();
-            cout << "Time KNN: " << end - start << endl;
-
-            // 5. Get Confusion Matrix for test
-            vector<vector<unsigned int>> confusionMatrixTest = getConfusionMatrix(labelsTest, scoreTest.first, config.nClasses);
-            cout << "Confusion Matrix Test: " << endl;
-            printMatrix(confusionMatrixTest);
-
-            cout << "Accuracy of K-NN classifier on training set: " << ((float)scoreTraining.second / (float)config.nTuples) << endl;
-            cout << "Accuracy of K-NN classifier on test set: " << ((float)scoreTest.second / (float)config.nTuples) << endl;
-        }
     } else if (config.mode == "hetero") {
         // Mode hetero for heterogeneous platforms, dynamic balancing
         if (!rank) {
-            master(config);
+            start = MPI_Wtime();
+            bestHyperParams = master(config);
+            end = MPI_Wtime();
         } else {
             slave(dataTraining, dataTest, labelsTraining, labelsTest, config);
         }
+    }
+
+    if (!rank) {
+        cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << endl;
+        cout << "Time getBestHyperParams: " << end - start << endl;
+        // 4. To finalize get the score of the best k and number of features
+        start = MPI_Wtime();
+        pair<vector<unsigned int>, unsigned int> scoreTest = getScoreKNN(bestHyperParams.first, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, bestHyperParams.second, config);
+        pair<vector<unsigned int>, unsigned int> scoreTraining = getScoreKNN(bestHyperParams.first, dataTraining, dataTraining, labelsTraining, labelsTraining, euclideanDistance, bestHyperParams.second, config);
+        end = MPI_Wtime();
+        cout << "Time KNN: " << end - start << endl;
+
+        // 5. Get Confusion Matrix for test
+        vector<vector<unsigned int>> confusionMatrixTest = getConfusionMatrix(labelsTest, scoreTest.first, config.nClasses);
+        cout << "Confusion Matrix Test: " << endl;
+        printMatrix(confusionMatrixTest);
+
+        cout << "Accuracy of K-NN classifier on training set: " << ((float)scoreTraining.second / (float)config.nTuples) << endl;
+        cout << "Accuracy of K-NN classifier on test set: " << ((float)scoreTest.second / (float)config.nTuples) << endl;
     }
 
     MPI_Finalize();
