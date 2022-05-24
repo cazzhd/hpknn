@@ -95,9 +95,7 @@ std::pair<unsigned int, unsigned int> getBestHyperParamsHomogeneous(unsigned sho
                                                                                               unsigned int,
                                                                                               unsigned int),
                                                                     const Config& config) {
-    unsigned int bestK = 0;
-    unsigned int bestNFeatures = 0;
-    unsigned int bestAccuracy = 0;
+    unsigned int bestK = 0, bestNFeatures = 0, bestAccuracy = 0;
     // tqdm bar;
     // bar.set_theme_braille();
 
@@ -106,7 +104,7 @@ std::pair<unsigned int, unsigned int> getBestHyperParamsHomogeneous(unsigned sho
     int size = MPI::COMM_WORLD.Get_size();
 
     unsigned int sizePerProcess = config.maxFeatures / size;
-    for (unsigned int f = 1 + rank; f < sizePerProcess; f += size) {
+    for (unsigned int f = 1 + rank; f <= sizePerProcess; f += size) {
         // bar.progress(f, sizePerProcess);
         std::vector<unsigned int> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)
@@ -170,13 +168,11 @@ std::vector<unsigned int> getBestHyperParamsHeterogeneous(unsigned long ptrFeatu
                                                                                     unsigned int,
                                                                                     unsigned int),
                                                           const Config& config) {
-    unsigned int bestK = 0;
-    unsigned int bestNFeatures = 0;
-    unsigned int bestAccuracy = 0;
+    unsigned int bestK = 0, bestNFeatures = 0, bestAccuracy = 0;
     // tqdm bar;
     // bar.set_theme_braille();
 
-    for (unsigned int f = 1 + ptrFeatures; f < ptrFeatures + config.chunkSize; ++f) {
+    for (unsigned int f = 1 + ptrFeatures; f <= ptrFeatures + config.chunkSize; ++f) {
         // bar.progress(f, sizePerProcess);
         std::vector<unsigned int> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)

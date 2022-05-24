@@ -50,51 +50,42 @@ using namespace std;
  * @return pair of the best k and the best accuracy
  */
 pair<unsigned int, unsigned int> master(const Config& config) {
-    unsigned int chunkProcessed = 0;
-    unsigned int bestAccuracy = 0;
+    const unsigned int TAM = 3;
+    unsigned int chunkProcessed = 0, slavesDone = 0, bestAccuracy = 0;
     pair<unsigned int, unsigned int> bestHyperParamsGlobal = make_pair(0, 0);
     vector<unsigned int> bestHyperParamsLocal;
-    bestHyperParamsLocal.resize(3);
+    bestHyperParamsLocal.resize(TAM);
+
     MPI_Status status;
-    unsigned int slavesDone = 0;
     unsigned int totalSlaves = MPI::COMM_WORLD.Get_size() - 1;
 
     // while (/* there are jobs unprocessed */ || /* there are slaves still working on jobs */) {
     while (slavesDone != totalSlaves) {
         // Wait for incoming slave message
-        // printf("Master wait for request slave\n");
-        // printf("Slaves done: %d/%d\n", slavesDone, totalSlaves);
         MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
         // Store rank of the slave who sent the message
-        int slave_rank = status.MPI_SOURCE;
+        int slaveRank = status.MPI_SOURCE;
 
         if (status.MPI_TAG == TAG_ASK_FOR_JOB) {
-            // printf("Master recive request\n");
             // If the slave is ready to receive a job, send it one
-            MPI_Recv(NULL, 0, MPI_INT, slave_rank, TAG_ASK_FOR_JOB, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(NULL, 0, MPI_INT, slaveRank, TAG_ASK_FOR_JOB, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             if (chunkProcessed < config.maxFeatures) {
-                // printf("Master send job: %d \n", chunkProcessed);
-                MPI_Send(&chunkProcessed, 1, MPI_UNSIGNED, slave_rank, TAG_JOB_DATA, MPI_COMM_WORLD);
+                MPI_Send(&chunkProcessed, 1, MPI_UNSIGNED, slaveRank, TAG_JOB_DATA, MPI_COMM_WORLD);
                 chunkProcessed += config.chunkSize;
             } else {
                 // Send stop message to the slave
-                // printf("Master send stop\n");
-                MPI_Send(NULL, 0, MPI_INT, slave_rank, TAG_STOP, MPI_COMM_WORLD);
+                MPI_Send(NULL, 0, MPI_INT, slaveRank, TAG_STOP, MPI_COMM_WORLD);
             }
         } else if (status.MPI_TAG == TAG_RESULT) {
             // If the slave sent a result, process it
-            // printf("Master recive result\n");
-            MPI_Recv(&bestHyperParamsLocal[0], 3, MPI_UNSIGNED, slave_rank, TAG_RESULT, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(&bestHyperParamsLocal[0], TAM, MPI_UNSIGNED, slaveRank, TAG_RESULT, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             if (bestHyperParamsLocal[2] > bestAccuracy) {
                 bestHyperParamsGlobal = make_pair(bestHyperParamsLocal[0], bestHyperParamsLocal[1]);
                 bestAccuracy = bestHyperParamsLocal[2];
             }
-            // printf("Master best hyperparams: %d:%d with accuracy: %d\n", bestHyperParamsGlobal.first,
-            //        bestHyperParamsGlobal.second, bestAccuracy);
         } else {
-            MPI_Recv(NULL, 0, MPI_INT, slave_rank, TAG_STOP, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Recv(NULL, 0, MPI_INT, slaveRank, TAG_STOP, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             slavesDone++;
-            // printf("Master slave %d done FINISH\n", slavesDone);
         }
     }
 
@@ -121,24 +112,17 @@ void slave(vector<float>& dataTraining,
 
     do {
         // First send message to master to ask for a job, and wait for job
-        // printf("Slave asking for a job\n");
         MPI_Send(NULL, 0, MPI_INT, 0, TAG_ASK_FOR_JOB, MPI_COMM_WORLD);
-        // printf("Slave wait for job\n");
         MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 
         if (status.MPI_TAG == TAG_JOB_DATA) {
             // Work with data received, process it
             MPI_Recv(&chunkToProcess, 1, MPI_INT, 0, TAG_JOB_DATA, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-            // printf("Slave recive job %d\n", chunkToProcess);
             vector<unsigned int> bestHyperParamsLocal = getBestHyperParamsHeterogeneous(chunkToProcess, 1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config);
             // Print best hyperparameters
-            // printf("Best hyperparameters: %d %d %d\n", bestHyperParamsLocal[0], bestHyperParamsLocal[1], bestHyperParamsLocal[2]);
             // Send result to master
-            // printf("Slave send result to master %d\n", chunkToProcess);
             MPI_Send(&bestHyperParamsLocal[0], bestHyperParamsLocal.size(), MPI_UNSIGNED, 0, TAG_RESULT, MPI_COMM_WORLD);
-            // printf("Slave send success %d\n", chunkToProcess);
         } else {
-            // printf("Slave recive stop\n");
             // If the master sent a stop message, stop
             MPI_Recv(NULL, 0, MPI_INT, 0, TAG_STOP, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             MPI_Send(NULL, 0, MPI_INT, 0, TAG_STOP, MPI_COMM_WORLD);
