@@ -53,6 +53,16 @@ typedef struct Energy {
     ~Energy();
 
     /**
+     * @brief fetch to API the energy saving and set the values of the struct
+     */
+    void fetchEnergyPriceNow();
+
+    /**
+     * @brief Function that check each hour if the energy saving is cheap, and sleep thread
+     */
+    void sleepUntilCheap();
+
+    /**
      * @brief Overload of the operator << to print the Energy object
      * @param os The output stream
      * @param o The Energy object

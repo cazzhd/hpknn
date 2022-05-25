@@ -139,8 +139,6 @@ void slave(vector<float>& dataTraining,
  * @param argv Arguments of the program
  */
 int main(int argc, char* argv[]) {
-    Energy saving;
-
     int size, rank, namelen;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
 
@@ -152,6 +150,10 @@ int main(int argc, char* argv[]) {
 
     // Initialize the configuration
     Config config(argc, argv);
+
+    // Initialize the energy saving to save the energy consumption
+    Energy saving;
+    saving.sleepUntilCheap();
 
     // Vars for use in both modes
     vector<float> dataTraining, dataTest;

@@ -20,7 +20,11 @@
 
 #include <cpr/cpr.h>
 
+#include <chrono>
+#include <ctime>
+#include <iomanip>
 #include <iostream>
+#include <thread>
 
 #include "struct_mapping/struct_mapping.h"
 
@@ -28,9 +32,6 @@
 
 /********************************* Methods ********************************/
 Energy::Energy() {
-    cpr::Response r = cpr::Get(cpr::Url{"https://api.preciodelaluz.org/v1/prices/now"},
-                               cpr::Parameters{{"zone", "PCB"}});
-
     struct_mapping::reg(&Energy::date, "date");
     struct_mapping::reg(&Energy::hour, "hour");
     struct_mapping::reg(&Energy::isCheap, "is-cheap");
@@ -39,13 +40,38 @@ Energy::Energy() {
     struct_mapping::reg(&Energy::price, "price");
     struct_mapping::reg(&Energy::units, "units");
 
-    std::istringstream is(r.text);
-    struct_mapping::map_json_to_struct(*this, is);
+    this->fetchEnergyPriceNow();
 }
 
 Energy::~Energy() {}
 
-std::ostream& operator<<(std::ostream& os, const Energy& o) {
+void Energy::fetchEnergyPriceNow() {
+    cpr::Response r = cpr::Get(cpr::Url{"https://api.preciodelaluz.org/v1/prices/now"},
+                               cpr::Parameters{{"zone", "PCB"}});
+    std::istringstream is(r.text);
+    struct_mapping::map_json_to_struct(*this, is);
+
+    std::cout << *this << std::endl;
+}
+
+void Energy::sleepUntilCheap() {
+    while (!(this->isCheap && this->isUnderAvg)) {
+        using std::chrono::system_clock;
+        std::time_t tt = system_clock::to_time_t(system_clock::now());
+
+        struct std::tm* ptm = std::localtime(&tt);
+        std::cout << "Current time: " << std::put_time(ptm, "%X") << '\n';
+        std::cout << "Waiting for the next hour to begin...\n";
+        ++ptm->tm_hour;
+        ptm->tm_min = 0;
+        ptm->tm_sec = 0;
+        std::this_thread::sleep_until(system_clock::from_time_t(mktime(ptm)));
+        this->fetchEnergyPriceNow();
+    }
+}
+
+std::ostream&
+operator<<(std::ostream& os, const Energy& o) {
     os << "date: " << o.date << std::endl;
     os << "hour: " << o.hour << std::endl;
     os << "isCheap: " << o.isCheap << std::endl;
