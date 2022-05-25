@@ -62,7 +62,6 @@ typedef struct Config {
 
     /**
      * @brief Destroy the Config:: Config object
-     *
      */
     ~Config();
 

@@ -33,6 +33,7 @@
 
 #include "config.h"
 #include "db.h"
+#include "energySaving.h"
 #include "knn.h"
 #include "util.h"
 
@@ -138,6 +139,8 @@ void slave(vector<float>& dataTraining,
  * @param argv Arguments of the program
  */
 int main(int argc, char* argv[]) {
+    Energy saving;
+
     int size, rank, namelen;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
 

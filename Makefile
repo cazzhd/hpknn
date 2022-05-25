@@ -26,6 +26,7 @@ NT			:= $(if ${nt},-x OMP_NUM_THREADS=$(nt),)
 MODE		:= $(if ${mode},-mode $(mode),)
 
 CXXFLAGS	:= -std=c++17 -Wall -g
+CPR         := -lcpr
 OPT 		:= -O2 -funroll-loops
 OMP 		= -fopenmp
 GPROF 		= -pg
@@ -88,7 +89,7 @@ $(OBJ)/%.o: $(SRC)/%.cpp
 
 $(OUTPUTMAIN): $(OBJECTS)
 	@echo "\n\e[33mLinking and creating executable $@ \e[0m"
-	$(MPICXX) $(GPROF) $(OMP) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(LFLAGS)
+	$(MPICXX) $(GPROF) $(OMP) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(CPR)
 
 # ************ Documentation ************
 
