@@ -58,9 +58,21 @@ typedef struct Energy {
     void fetchEnergyPriceNow();
 
     /**
-     * @brief Function that check each hour if the energy saving is cheap, and sleep thread
+     * @brief Function that reads the vals and determine if needs to sleep
      */
-    void sleepUntilCheap();
+    void checkSleep();
+
+    /**
+     * @brief Check each hour doing fetch to API the energy saving and set the values of the struct
+     * thread 0 check every hour if the energy saving is cheap, and sleep thread
+     */
+    void checkEnergyPrice();
+
+    /**
+     * @brief sleep thread one hour
+     * @param isSlave if is slave sleep 5 seconds more
+     */
+    void sleepThread(bool isSlave = false);
 
     /**
      * @brief Overload of the operator << to print the Energy object

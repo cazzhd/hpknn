@@ -22,7 +22,7 @@ MPIEXEC		?= mpiexec --bind-to none --map-by node
 COMPILER	:= $(if $(filter true,${mpi}),$(MPICXX),$(CXX))
 # EXECUTOR	:= $(if $(filter true,${mpi}),$(MPIEXEC),)
 NP			:= $(if ${np},-np $(np),)
-NT			:= $(if ${nt},-x OMP_NUM_THREADS=$(nt),)
+NT			:= $(if ${nt},-x OMP_NUM_THREADS=$(nt) -x OMP_NESTED=TRUE,)
 MODE		:= $(if ${mode},-mode $(mode),)
 
 CXXFLAGS	:= -std=c++17 -Wall -g

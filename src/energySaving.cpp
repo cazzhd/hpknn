@@ -40,7 +40,7 @@ Energy::Energy() {
     struct_mapping::reg(&Energy::price, "price");
     struct_mapping::reg(&Energy::units, "units");
 
-    this->fetchEnergyPriceNow();
+    this->checkEnergyPrice();
 }
 
 Energy::~Energy() {}
@@ -54,24 +54,34 @@ void Energy::fetchEnergyPriceNow() {
     std::cout << *this << std::endl;
 }
 
-void Energy::sleepUntilCheap() {
-    while (!(this->isCheap && this->isUnderAvg)) {
-        using std::chrono::system_clock;
-        std::time_t tt = system_clock::to_time_t(system_clock::now());
-
-        struct std::tm* ptm = std::localtime(&tt);
-        std::cout << "Current time: " << std::put_time(ptm, "%X") << '\n';
-        std::cout << "Waiting for the next hour to begin...\n";
-        ++ptm->tm_hour;
-        ptm->tm_min = 0;
-        ptm->tm_sec = 0;
-        std::this_thread::sleep_until(system_clock::from_time_t(mktime(ptm)));
-        this->fetchEnergyPriceNow();
+void Energy::checkSleep() {
+    if (!(this->isCheap && this->isUnderAvg)) {
+        this->sleepThread(true);
     }
 }
 
-std::ostream&
-operator<<(std::ostream& os, const Energy& o) {
+void Energy::checkEnergyPrice() {
+    while (true) {
+        this->fetchEnergyPriceNow();
+        sleepThread();
+    }
+}
+
+void Energy::sleepThread(bool isSlave) {
+    using std::chrono::system_clock;
+    std::time_t tt = system_clock::to_time_t(system_clock::now());
+
+    struct std::tm* ptm = std::localtime(&tt);
+    std::cout << "Current time: " << std::put_time(ptm, "%X") << '\n';
+    std::cout << "Waiting for the next hour to begin...\n";
+
+    ++ptm->tm_hour;
+    ptm->tm_min = 0;
+    ptm->tm_sec = isSlave ? 5 : 0;
+    std::this_thread::sleep_until(system_clock::from_time_t(mktime(ptm)));
+}
+
+std::ostream& operator<<(std::ostream& os, const Energy& o) {
     os << "date: " << o.date << std::endl;
     os << "hour: " << o.hour << std::endl;
     os << "isCheap: " << o.isCheap << std::endl;

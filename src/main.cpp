@@ -151,64 +151,67 @@ int main(int argc, char* argv[]) {
     // Initialize the configuration
     Config config(argc, argv);
 
-    // Initialize the energy saving to save the energy consumption
-    Energy saving;
-    saving.sleepUntilCheap();
+#pragma omp parallel num_threads(2)
+    {
+        if (omp_get_thread_num() == 0) {
+            // Initialize the energy saving to save the energy consumption
+            Energy saving;
+        }
 
-    // Vars for use in both modes
-    vector<float> dataTraining, dataTest;
-    vector<unsigned int> labelsTraining, labelsTest, MRMR;
-    pair<unsigned int, unsigned int> bestHyperParams;
-    double start, end;
+        // Vars for use in both modes
+        vector<float> dataTraining, dataTest;
+        vector<unsigned int> labelsTraining, labelsTest, MRMR;
+        pair<unsigned int, unsigned int> bestHyperParams;
+        double start, end;
 
-    // 1. Read data from files
-    readDataFromFiles(dataTraining, dataTest, labelsTraining, labelsTest, MRMR, config);
+        // 1. Read data from files
+        readDataFromFiles(dataTraining, dataTest, labelsTraining, labelsTest, MRMR, config);
 
-    // 2. Sorting by best features (MRMR), get best scores
-    if (config.sortingByMRMR) {
-        sortFeaturesByMRMR(dataTraining, dataTest, MRMR, config);
-    }
+        // 2. Sorting by best features (MRMR), get best scores
+        if (config.sortingByMRMR) {
+            sortFeaturesByMRMR(dataTraining, dataTest, MRMR, config);
+        }
 
-    // Mode homo for homogeneous platforms, static balancing
-    if (config.mode == "homo") {
-        // Present each process with mpi
-        // printf("\nHello from process %d/%d on %s\n", rank, size, processor_name);
+        // Mode homo for homogeneous platforms, static balancing
+        if (config.mode == "homo") {
+            // Present each process with mpi
+            // printf("\nHello from process %d/%d on %s\n", rank, size, processor_name);
 
-        // 3. Get the best k and number of features to use, floor(sqrt(config.nTuples)) // Recommended
-        start = MPI_Wtime();
-        bestHyperParams = getBestHyperParamsHomogeneous(1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config);
-        end = MPI_Wtime();
-
-    } else if (config.mode == "hetero") {
-        // Mode hetero for heterogeneous platforms, dynamic balancing
-        if (!rank) {
+            // 3. Get the best k and number of features to use, floor(sqrt(config.nTuples)) // Recommended
             start = MPI_Wtime();
-            bestHyperParams = master(config);
+            bestHyperParams = getBestHyperParamsHomogeneous(1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config);
             end = MPI_Wtime();
-        } else {
-            slave(dataTraining, dataTest, labelsTraining, labelsTest, config);
+
+        } else if (config.mode == "hetero") {
+            // Mode hetero for heterogeneous platforms, dynamic balancing
+            if (!rank) {
+                start = MPI_Wtime();
+                bestHyperParams = master(config);
+                end = MPI_Wtime();
+            } else {
+                slave(dataTraining, dataTest, labelsTraining, labelsTest, config);
+            }
+        }
+
+        if (!rank) {
+            cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << endl;
+            cout << "Time getBestHyperParams: " << end - start << endl;
+            // 4. To finalize get the score of the best k and number of features
+            start = MPI_Wtime();
+            pair<vector<unsigned int>, unsigned int> scoreTest = getScoreKNN(bestHyperParams.first, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, bestHyperParams.second, config);
+            pair<vector<unsigned int>, unsigned int> scoreTraining = getScoreKNN(bestHyperParams.first, dataTraining, dataTraining, labelsTraining, labelsTraining, euclideanDistance, bestHyperParams.second, config);
+            end = MPI_Wtime();
+            cout << "Time KNN: " << end - start << endl;
+
+            // 5. Get Confusion Matrix for test
+            vector<vector<unsigned int>> confusionMatrixTest = getConfusionMatrix(labelsTest, scoreTest.first, config.nClasses);
+            cout << "Confusion Matrix Test: " << endl;
+            printMatrix(confusionMatrixTest);
+
+            cout << "Accuracy of K-NN classifier on training set: " << ((float)scoreTraining.second / (float)config.nTuples) << endl;
+            cout << "Accuracy of K-NN classifier on test set: " << ((float)scoreTest.second / (float)config.nTuples) << endl;
         }
     }
-
-    if (!rank) {
-        cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << endl;
-        cout << "Time getBestHyperParams: " << end - start << endl;
-        // 4. To finalize get the score of the best k and number of features
-        start = MPI_Wtime();
-        pair<vector<unsigned int>, unsigned int> scoreTest = getScoreKNN(bestHyperParams.first, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, bestHyperParams.second, config);
-        pair<vector<unsigned int>, unsigned int> scoreTraining = getScoreKNN(bestHyperParams.first, dataTraining, dataTraining, labelsTraining, labelsTraining, euclideanDistance, bestHyperParams.second, config);
-        end = MPI_Wtime();
-        cout << "Time KNN: " << end - start << endl;
-
-        // 5. Get Confusion Matrix for test
-        vector<vector<unsigned int>> confusionMatrixTest = getConfusionMatrix(labelsTest, scoreTest.first, config.nClasses);
-        cout << "Confusion Matrix Test: " << endl;
-        printMatrix(confusionMatrixTest);
-
-        cout << "Accuracy of K-NN classifier on training set: " << ((float)scoreTraining.second / (float)config.nTuples) << endl;
-        cout << "Accuracy of K-NN classifier on test set: " << ((float)scoreTest.second / (float)config.nTuples) << endl;
-    }
-
     MPI_Finalize();
     return EXIT_SUCCESS;
 }

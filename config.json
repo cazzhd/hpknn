@@ -10,5 +10,5 @@
     "normalize": true,
     "sortingByMRMR": true,
     "maxFeatures": 500,
-    "chunkSize": 100
+    "chunkSize": 50
 }
