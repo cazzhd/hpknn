@@ -79,7 +79,7 @@ $(FOLDERS_CREATE):
 $(OBJ)/%.o: $(SRC)/%.cpp
 	@echo "\e[33mCompiling module $< \e[0m"
 	@if [ $< = "src/main.cpp" ]; then\
-		$(MPICXX) $(GPROF) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $< -o $@;\
+		$(MPICXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $< -o $@;\
 	else\
 		$(MPICXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -c $< -o $@;\
 	fi
@@ -89,7 +89,8 @@ $(OBJ)/%.o: $(SRC)/%.cpp
 
 $(OUTPUTMAIN): $(OBJECTS)
 	@echo "\n\e[33mLinking and creating executable $@ \e[0m"
-	$(MPICXX) $(GPROF) $(OMP) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(CPR)
+	$(MPICXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(CPR)
+	
 
 # ************ Documentation ************
 

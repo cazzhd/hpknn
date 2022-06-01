@@ -27,8 +27,6 @@
 #include <cstring>
 #include <iostream>
 
-#include "tqdm.h"
-
 /******************************** Constants *******************************/
 
 /********************************* Methods ********************************/
@@ -96,16 +94,15 @@ std::pair<unsigned int, unsigned int> getBestHyperParamsHomogeneous(unsigned sho
                                                                                               unsigned int),
                                                                     const Config& config) {
     unsigned int bestK = 0, bestNFeatures = 0, bestAccuracy = 0;
-    // tqdm bar;
-    // bar.set_theme_braille();
 
     // Get rank MPI
     int rank = MPI::COMM_WORLD.Get_rank();
     int size = MPI::COMM_WORLD.Get_size();
 
     unsigned int sizePerProcess = config.maxFeatures / size;
-    for (unsigned int f = 1 + rank; f <= sizePerProcess; f += size) {
-        // bar.progress(f, sizePerProcess);
+    // //Strided version
+    // for (unsigned int f = 1 + rank; f <= config.maxFeatures; f += size) {
+    for (unsigned int f = 1 + (sizePerProcess * rank); f <= sizePerProcess * (rank + 1); ++f) {
         std::vector<unsigned int> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)
         for (unsigned int i = 0; i < config.nTuples; ++i) {
@@ -129,7 +126,6 @@ std::pair<unsigned int, unsigned int> getBestHyperParamsHomogeneous(unsigned sho
     }
 
     // The process has best accuracy send bestK and bestNFeatures to root
-
     std::vector<unsigned int> bestKs(size, 0);
     std::vector<unsigned int> bestNFeaturess(size, 0);
     std::vector<unsigned int> bestAccuracies(size, 0);
@@ -152,7 +148,6 @@ std::pair<unsigned int, unsigned int> getBestHyperParamsHomogeneous(unsigned sho
     }
 
     return std::make_pair(bestKs[indexBestAccuracy], bestNFeaturess[indexBestAccuracy]);
-    // bar.finish();
 }
 
 std::vector<unsigned int> getBestHyperParamsHeterogeneous(unsigned long ptrFeatures,
@@ -169,11 +164,8 @@ std::vector<unsigned int> getBestHyperParamsHeterogeneous(unsigned long ptrFeatu
                                                                                     unsigned int),
                                                           const Config& config) {
     unsigned int bestK = 0, bestNFeatures = 0, bestAccuracy = 0;
-    // tqdm bar;
-    // bar.set_theme_braille();
 
     for (unsigned int f = 1 + ptrFeatures; f <= ptrFeatures + config.chunkSize; ++f) {
-        // bar.progress(f, sizePerProcess);
         std::vector<unsigned int> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)
         for (unsigned int i = 0; i < config.nTuples; ++i) {
@@ -197,7 +189,6 @@ std::vector<unsigned int> getBestHyperParamsHeterogeneous(unsigned long ptrFeatu
     }
 
     return std::vector<unsigned int>{bestK, bestNFeatures, bestAccuracy};
-    // bar.finish();
 }
 
 std::vector<std::vector<unsigned int>> getConfusionMatrix(std::vector<unsigned int>& labels,

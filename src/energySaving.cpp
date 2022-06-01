@@ -39,8 +39,6 @@ Energy::Energy() {
     struct_mapping::reg(&Energy::market, "market");
     struct_mapping::reg(&Energy::price, "price");
     struct_mapping::reg(&Energy::units, "units");
-
-    this->checkEnergyPrice();
 }
 
 Energy::~Energy() {}
@@ -50,11 +48,11 @@ void Energy::fetchEnergyPriceNow() {
                                cpr::Parameters{{"zone", "PCB"}});
     std::istringstream is(r.text);
     struct_mapping::map_json_to_struct(*this, is);
-
-    std::cout << *this << std::endl;
 }
 
 void Energy::checkSleep() {
+    // Print value date with printf
+    printf("Thread slave: Date: %s\n", date.c_str());
     if (!(this->isCheap && this->isUnderAvg)) {
         this->sleepThread(true);
     }
@@ -62,6 +60,7 @@ void Energy::checkSleep() {
 
 void Energy::checkEnergyPrice() {
     while (true) {
+        printf("Thread main checking energy price\n");
         this->fetchEnergyPriceNow();
         sleepThread();
     }
@@ -73,11 +72,11 @@ void Energy::sleepThread(bool isSlave) {
 
     struct std::tm* ptm = std::localtime(&tt);
     std::cout << "Current time: " << std::put_time(ptm, "%X") << '\n';
-    std::cout << "Waiting for the next hour to begin...\n";
 
     ++ptm->tm_hour;
     ptm->tm_min = 0;
     ptm->tm_sec = isSlave ? 5 : 0;
+    std::cout << "Waiting for: " << std::put_time(ptm, "%X") << '\n';
     std::this_thread::sleep_until(system_clock::from_time_t(mktime(ptm)));
 }
 

@@ -151,13 +151,20 @@ int main(int argc, char* argv[]) {
     // Initialize the configuration
     Config config(argc, argv);
 
-#pragma omp parallel num_threads(2)
+    // Initialize the energy to save the energy consumption
+    Energy saving;
+
+#pragma omp parallel num_threads(2) if (config.savingEnergy)
     {
-        if (omp_get_thread_num() == 0) {
+        // printf thread id
+        if (omp_get_thread_num() == 0 && config.savingEnergy) {
             // Initialize the energy saving to save the energy consumption
-            Energy saving;
+            saving.checkEnergyPrice();
         }
 
+        if (config.savingEnergy) {
+            saving.checkSleep();
+        }
         // Vars for use in both modes
         vector<float> dataTraining, dataTest;
         vector<unsigned int> labelsTraining, labelsTest, MRMR;

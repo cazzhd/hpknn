@@ -50,6 +50,7 @@ typedef struct Config {
     bool sortingByMRMR;           /**< Flag to sort the dataset by MRMR */
     long maxFeatures;             /**< Maximum number of features to use */
     unsigned int chunkSize;       /**< Size of the chunk to send to the slaves */
+    bool savingEnergy;            /**< Flag to save the energy of the program */
 
     /********************************* Methods ********************************/
     /**

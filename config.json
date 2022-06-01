@@ -10,5 +10,6 @@
     "normalize": true,
     "sortingByMRMR": true,
     "maxFeatures": 500,
-    "chunkSize": 50
+    "chunkSize": 10,
+    "savingEnergy": false
 }
