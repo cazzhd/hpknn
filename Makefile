@@ -26,8 +26,10 @@ NT			:= $(if ${nt},-x OMP_NUM_THREADS=$(nt) -x OMP_NESTED=TRUE,)
 MODE		:= $(if ${mode},-mode $(mode),)
 
 CXXFLAGS	:= -std=c++17 -Wall -g
-CPR         := -lcpr
-CURL         := -lcurl-d
+# CPR         := -lcpr
+# CURL        := -lcurl-d
+SSL			:= -lssl
+CRYPTO		:= -lcrypto
 OPT 		:= -O2 -funroll-loops
 OMP 		= -fopenmp
 GPROF 		= -pg
@@ -36,7 +38,7 @@ BIN		:= bin
 SRC		:= src
 OBJ		:= obj
 INCLUDE	:= include
-LIB	:= lib
+LIB		:= lib
 DOC		:= docs
 
 # ************ Plataform ************
@@ -93,7 +95,7 @@ $(OBJ)/%.o: $(SRC)/%.cpp
 
 $(OUTPUTMAIN): $(OBJECTS)
 	@echo "\n\e[33mLinking and creating executable $@ \e[0m"
-	$(MPICXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(LIBS) $(CPR) $(CURL)
+	$(MPICXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(SSL) $(CRYPTO)
 
 
 # ************ Documentation ************

@@ -20,6 +20,14 @@
 #define ENERGY_SAVING_H
 
 /********************************* Includes *******************************/
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <openssl/err.h>
+#include <openssl/ssl.h>
+#include <stdio.h>
+#include <sys/socket.h>
+
 #include <string>
 
 /******************************** Constants *******************************/
@@ -27,17 +35,79 @@
 /******************************** Structures ******************************/
 
 /**
+ * @brief Class manage the energy saving, realizate the connection with the server and get the data
+ */
+class EnergyAwareClientAPI {
+   private:
+    int sock;                  /**< Socket descriptor */
+    SSL *ssl;                  /**< SSL descriptor */
+    char *host;                /**< Host name */
+    int port;                  /**< Port */
+    struct sockaddr_in server; /**< Server address */
+
+    /**
+     * @brief Open Socket
+     * @return 0 if success, -1 if error
+     * @return int
+     */
+    int openSocket();
+
+    /**
+     * @brief Connect to the server
+     * @return 0 if success, -1 if error
+     * @return int
+     */
+    int connectToServer();
+
+    /**
+     * @brief Init the SSL
+     */
+    void initSSL();
+
+    /**
+     * @brief Convert host name to IP
+     * @param host Host name
+     * @return char*
+     */
+    char *hostToIp(const char *host);
+
+   public:
+    /**
+     * @brief Constructor
+     * @param host Host name
+     * @param port Port
+     */
+    EnergyAwareClientAPI(const char *host, int port);
+
+    /**
+     * @brief Send package
+     *
+     * @param buffer Buffer to send
+     * @return int
+     */
+    int sendPackage(const char *buffer);
+
+    /**
+     * @brief Receive package
+     *
+     * @return string
+     */
+    std::string recvPackage();
+};
+
+/**
  * @brief Struct of Energy that permit set the energy saving for the program from json response
  * get from the server
  */
 typedef struct Energy {
-    std::string date;   /**< Date of the energy saving */
-    std::string hour;   /**< Hour of the energy saving */
-    bool isCheap;       /**< Flag to know if the energy saving is cheap */
-    bool isUnderAvg;    /**< Flag to know if the energy saving is under average */
-    std::string market; /**< Market of the energy saving */
-    float price;        /**< Price of the energy saving */
-    std::string units;  /**< Units of the energy saving */
+    std::string date;             /**< Date of the energy saving */
+    std::string hour;             /**< Hour of the energy saving */
+    bool isCheap;                 /**< Flag to know if the energy saving is cheap */
+    bool isUnderAvg;              /**< Flag to know if the energy saving is under average */
+    std::string market;           /**< Market of the energy saving */
+    float price;                  /**< Price of the energy saving */
+    std::string units;            /**< Units of the energy saving */
+    EnergyAwareClientAPI *client; /**< Client to connect to the server */
 
     /********************************* Methods ********************************/
 
@@ -85,7 +155,7 @@ typedef struct Energy {
      * @param o The Energy object
      * @return std::ostream& The output stream
      */
-    friend std::ostream& operator<<(std::ostream& os, const Energy& o);
+    friend std::ostream &operator<<(std::ostream &os, const Energy &o);
 } Energy;
 
 #endif
