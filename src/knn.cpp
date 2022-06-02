@@ -99,28 +99,52 @@ std::pair<unsigned int, unsigned int> getBestHyperParamsHomogeneous(unsigned sho
     int rank = MPI::COMM_WORLD.Get_rank();
     int size = MPI::COMM_WORLD.Get_size();
 
-    unsigned int sizePerProcess = config.maxFeatures / size;
-    // //Strided version
-    // for (unsigned int f = 1 + rank; f <= config.maxFeatures; f += size) {
-    for (unsigned int f = 1 + (sizePerProcess * rank); f <= sizePerProcess * (rank + 1); ++f) {
-        std::vector<unsigned int> vectorAccuracies(maxValueK - minValueK + 1, 0);
+    // Strided version
+    if (config.stridedHomo) {
+        for (unsigned int f = 1 + rank; f <= config.maxFeatures; f += size) {
+            std::vector<unsigned int> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)
-        for (unsigned int i = 0; i < config.nTuples; ++i) {
-            std::vector<std::pair<float, unsigned int>> distances = getDistances(dataTraining, dataTest, labelsTraining, distanceFunction, i * config.nFeatures, f, config);
-            for (unsigned int k = minValueK; k <= maxValueK; ++k) {
-                unsigned int labelPredicted = getMostFrequentClass(k, distances);
-                if (labelPredicted == labelsTest[i]) {
-                    vectorAccuracies[k - minValueK]++;
+            for (unsigned int i = 0; i < config.nTuples; ++i) {
+                std::vector<std::pair<float, unsigned int>> distances = getDistances(dataTraining, dataTest, labelsTraining, distanceFunction, i * config.nFeatures, f, config);
+                for (unsigned int k = minValueK; k <= maxValueK; ++k) {
+                    unsigned int labelPredicted = getMostFrequentClass(k, distances);
+                    if (labelPredicted == labelsTest[i]) {
+                        vectorAccuracies[k - minValueK]++;
+                    }
+                }
+            }
+// Iterate for vectorAccuracies
+#pragma omp parallel for schedule(dynamic)
+            for (unsigned int i = 0; i < vectorAccuracies.size(); ++i) {
+                if (vectorAccuracies[i] > bestAccuracy) {
+                    bestAccuracy = vectorAccuracies[i];
+                    bestK = i + minValueK;
+                    bestNFeatures = f;
                 }
             }
         }
+    } else {
+        unsigned int sizePerProcess = config.maxFeatures / size;
+        for (unsigned int f = 1 + (sizePerProcess * rank); f <= sizePerProcess * (rank + 1); ++f) {
+            std::vector<unsigned int> vectorAccuracies(maxValueK - minValueK + 1, 0);
+#pragma omp parallel for schedule(dynamic)
+            for (unsigned int i = 0; i < config.nTuples; ++i) {
+                std::vector<std::pair<float, unsigned int>> distances = getDistances(dataTraining, dataTest, labelsTraining, distanceFunction, i * config.nFeatures, f, config);
+                for (unsigned int k = minValueK; k <= maxValueK; ++k) {
+                    unsigned int labelPredicted = getMostFrequentClass(k, distances);
+                    if (labelPredicted == labelsTest[i]) {
+                        vectorAccuracies[k - minValueK]++;
+                    }
+                }
+            }
 // Iterate for vectorAccuracies
 #pragma omp parallel for schedule(dynamic)
-        for (unsigned int i = 0; i < vectorAccuracies.size(); ++i) {
-            if (vectorAccuracies[i] > bestAccuracy) {
-                bestAccuracy = vectorAccuracies[i];
-                bestK = i + minValueK;
-                bestNFeatures = f;
+            for (unsigned int i = 0; i < vectorAccuracies.size(); ++i) {
+                if (vectorAccuracies[i] > bestAccuracy) {
+                    bestAccuracy = vectorAccuracies[i];
+                    bestK = i + minValueK;
+                    bestNFeatures = f;
+                }
             }
         }
     }

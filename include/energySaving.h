@@ -75,6 +75,11 @@ typedef struct Energy {
     void sleepThread(bool isSlave = false);
 
     /**
+     * @brief thread slace wait until master do fetch to API the energy saving and set the values of the struct
+     */
+    void waitUntilInitializeData();
+
+    /**
      * @brief Overload of the operator << to print the Energy object
      * @param os The output stream
      * @param o The Energy object

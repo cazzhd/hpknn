@@ -90,7 +90,7 @@ $(OBJ)/%.o: $(SRC)/%.cpp
 $(OUTPUTMAIN): $(OBJECTS)
 	@echo "\n\e[33mLinking and creating executable $@ \e[0m"
 	$(MPICXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(CPR)
-	
+
 
 # ************ Documentation ************
 

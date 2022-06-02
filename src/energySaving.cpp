@@ -18,14 +18,13 @@
 /********************************* Includes *******************************/
 #include "energySaving.h"
 
-#include <cpr/cpr.h>
-
 #include <chrono>
 #include <ctime>
 #include <iomanip>
 #include <iostream>
 #include <thread>
 
+#include "cpr/cpr.h"
 #include "struct_mapping/struct_mapping.h"
 
 /******************************** Constants *******************************/
@@ -50,9 +49,15 @@ void Energy::fetchEnergyPriceNow() {
     struct_mapping::map_json_to_struct(*this, is);
 }
 
+void Energy::waitUntilInitializeData() {
+    while (this->date == "")
+        ;
+}
+
 void Energy::checkSleep() {
     // Print value date with printf
-    printf("Thread slave: Date: %s\n", date.c_str());
+    this->waitUntilInitializeData();
+    // printf("Thread slave: Date: %s\n", date.c_str());
     if (!(this->isCheap && this->isUnderAvg)) {
         this->sleepThread(true);
     }
@@ -60,7 +65,7 @@ void Energy::checkSleep() {
 
 void Energy::checkEnergyPrice() {
     while (true) {
-        printf("Thread main checking energy price\n");
+        // printf("Thread main checking energy price\n");
         this->fetchEnergyPriceNow();
         sleepThread();
     }

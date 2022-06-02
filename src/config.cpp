@@ -80,6 +80,7 @@ Config::Config(int argc, char** argv) {
     struct_mapping::reg(&Config::maxFeatures, "maxFeatures");
     struct_mapping::reg(&Config::chunkSize, "chunkSize");
     struct_mapping::reg(&Config::savingEnergy, "savingEnergy");
+    struct_mapping::reg(&Config::stridedHomo, "stridedHomo");
 
     std::ifstream fileConfig(filename.c_str());
     std::stringstream buffer;
@@ -109,6 +110,8 @@ std::ostream& operator<<(std::ostream& os, const Config& o) {
     os << "maxFeatures: " << o.maxFeatures << std::endl;
     os << "chunkSize: " << o.chunkSize << std::endl;
     os << "savingEnergy: " << o.savingEnergy << std::endl;
+    os << "stridedHomo: " << o.stridedHomo << std::endl;
+
     return os;
 }
 

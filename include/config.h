@@ -51,6 +51,7 @@ typedef struct Config {
     long maxFeatures;             /**< Maximum number of features to use */
     unsigned int chunkSize;       /**< Size of the chunk to send to the slaves */
     bool savingEnergy;            /**< Flag to save the energy of the program */
+    bool stridedHomo;             /**< Flag to set strided or no strided version for homo mode */
 
     /********************************* Methods ********************************/
     /**
