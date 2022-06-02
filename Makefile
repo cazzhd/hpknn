@@ -27,6 +27,7 @@ MODE		:= $(if ${mode},-mode $(mode),)
 
 CXXFLAGS	:= -std=c++17 -Wall -g
 CPR         := -lcpr
+CURL         := -lcurl-d
 OPT 		:= -O2 -funroll-loops
 OMP 		= -fopenmp
 GPROF 		= -pg
@@ -35,6 +36,7 @@ BIN		:= bin
 SRC		:= src
 OBJ		:= obj
 INCLUDE	:= include
+LIB	:= lib
 DOC		:= docs
 
 # ************ Plataform ************
@@ -50,6 +52,7 @@ else
 	MAIN	:= hpknn
 	SOURCEDIRS	:= $(shell find $(SRC) -type d)
 	INCLUDEDIRS	:= $(shell find $(INCLUDE) -type d)
+	LIBSDIRS	:= $(shell find $(LIB) -type d)
 	FIXPATH = $1
 	RM = rm -f
 	RMDIR = rmdir
@@ -57,6 +60,7 @@ else
 endif
 
 INCLUDES	:= $(patsubst %,-I%, $(INCLUDEDIRS:%/=%))
+LIBS		:= $(patsubst %,-L%, $(LIBSDIRS:%/=%))
 SOURCES		:= $(wildcard $(patsubst %,%/*.cpp, $(SOURCEDIRS)))
 OBJECTS		:= $(subst $(SRC), $(OBJ), $(SOURCES:.cpp=.o))
 OUTPUTMAIN	:= $(call FIXPATH,$(BIN)/$(MAIN))
@@ -89,7 +93,7 @@ $(OBJ)/%.o: $(SRC)/%.cpp
 
 $(OUTPUTMAIN): $(OBJECTS)
 	@echo "\n\e[33mLinking and creating executable $@ \e[0m"
-	$(MPICXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(CPR)
+	$(MPICXX) $(OMP) $(CXXFLAGS) $(INCLUDES) -o $(OUTPUTMAIN) $(OBJECTS) $(LIBS) $(CPR) $(CURL)
 
 
 # ************ Documentation ************
