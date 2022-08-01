@@ -154,6 +154,7 @@ int main(int argc, char* argv[]) {
     // Initialize the energy to save the energy consumption
     Energy saving;
 
+    omp_set_max_active_levels(2);
 #pragma omp parallel num_threads(2) if (config.savingEnergy)
     {
         // printf thread id

@@ -11,6 +11,6 @@
     "sortingByMRMR": true,
     "maxFeatures": 500,
     "chunkSize": 10,
-    "savingEnergy": true,
-    "stridedHomo": false
+    "savingEnergy": false,
+    "stridedHomo": true
 }

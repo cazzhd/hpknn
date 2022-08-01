@@ -89,9 +89,17 @@ Config::Config(int argc, char** argv) {
 
     struct_mapping::map_json_to_struct(*this, buffer);
     this->TAM = this->nTuples * this->nFeatures;
+    this->TAM_MAX_FEATURES = this->nTuples * this->maxFeatures;
 
-    /************ Check if size of data is divisible by the number of processors ***********/
-    check(nTuples * nFeatures % MPI::COMM_WORLD.Get_size(), "%s\n", ERROR_NPROCESS);
+    /************ Checks for both modes ***********/
+    /************ Check if in mode hetero have min two process ***********/
+    if (this->mode.compare("hetero") == 0) {
+        check(MPI::COMM_WORLD.Get_size() < 2, "%s\n", ERROR_NPROCESS_HETERO);
+        check(this->TAM_MAX_FEATURES % this->chunkSize, "%s\n", ERROR_CHUNKSIZE_HETERO);
+    } else {
+        /************ Check if size of data is divisible by the number of processors ***********/
+        check(this->maxFeatures % MPI::COMM_WORLD.Get_size(), "%s\n", ERROR_NPROCESS_HOMO);
+    }
 }
 
 Config::~Config() {}
@@ -105,6 +113,7 @@ std::ostream& operator<<(std::ostream& os, const Config& o) {
     os << "nTuples: " << o.nTuples << std::endl;
     os << "nFeatures: " << o.nFeatures << std::endl;
     os << "TAM: " << o.TAM << std::endl;
+    os << "TAM_MAX_FEATURES: " << o.TAM_MAX_FEATURES << std::endl;
     os << "nClasses: " << o.nClasses << std::endl;
     os << "normalize: " << o.normalize << std::endl;
     os << "maxFeatures: " << o.maxFeatures << std::endl;

@@ -23,12 +23,11 @@
 #include <fstream>
 
 /******************************** Constants *******************************/
-const char* const ERROR_PARSE_ARGUMENTS =
-    "Error: Missing required value of the argument or nothing to parse, please use -h for more information.";
-const char* const ERROR_NPROCESS =
-    "Error: Number of data ntuple * nfeatures is not divisible by the number of processors";
-const char* const ERROR_MODE =
-    "Error: -mode must be hetero or homo";
+const char* const ERROR_PARSE_ARGUMENTS = "Error: Missing required value of the argument or nothing to parse, please use -h for more information.";
+const char* const ERROR_MODE = "Error: -mode must be hetero or homo";
+const char* const ERROR_NPROCESS_HOMO = "Error: Number of data ntuple * nfeatures is not divisible by the number of processors";
+const char* const ERROR_NPROCESS_HETERO = "Error: Mode hetero must have two process or more";
+const char* const ERROR_CHUNKSIZE_HETERO = "Error: Number of data ntuple * nfeatures is not divisible by the chunsize in config.json";
 
 /******************************** Structures ******************************/
 
@@ -45,6 +44,7 @@ typedef struct Config {
     long nTuples;                 /**< Number of tuples of the dataset */
     long nFeatures;               /**< Number of features of the dataset */
     long TAM;                     /**< Number of tuples * number of features */
+    long TAM_MAX_FEATURES;        /**< Number of tuples * number of max features */
     unsigned int nClasses;        /**< Number of classes of the dataset */
     bool normalize;               /**< Flag to normalize the dataset */
     bool sortingByMRMR;           /**< Flag to sort the dataset by MRMR */
