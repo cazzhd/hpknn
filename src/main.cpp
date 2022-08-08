@@ -48,9 +48,10 @@ using namespace std;
  * @brief master function executed by the master process
  * managing the slaves with send jobs and receiving results using dinamyc balancing
  * @param config configuration parameters
+ * @param energy saving parameters
  * @return pair of the best k and the best accuracy
  */
-pair<unsigned int, unsigned int> master(const Config& config) {
+pair<unsigned int, unsigned int> master(const Config& config, Energy& saving) {
     const unsigned int TAM = 3;
     unsigned int chunkProcessed = 0, slavesDone = 0, bestAccuracy = 0;
     pair<unsigned int, unsigned int> bestHyperParamsGlobal = make_pair(0, 0);
@@ -62,6 +63,11 @@ pair<unsigned int, unsigned int> master(const Config& config) {
 
     // while (/* there are jobs unprocessed */ || /* there are slaves still working on jobs */) {
     while (slavesDone != totalSlaves) {
+        std::cout << "maestro" << std::endl;
+        if (config.savingEnergy) {
+            saving.checkSleep();
+        }
+
         // Wait for incoming slave message
         MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
         // Store rank of the slave who sent the message
@@ -101,17 +107,23 @@ pair<unsigned int, unsigned int> master(const Config& config) {
  * @param labelsTraining labels for training
  * @param labelsTest labels for testing
  * @param config configuration parameters
+ * @param energy saving parameters
  */
 void slave(vector<float>& dataTraining,
            vector<float>& dataTest,
            vector<unsigned int>& labelsTraining,
            vector<unsigned int>& labelsTest,
-           const Config& config) {
+           const Config& config,
+           Energy& saving) {
     bool hasWork = true;
     unsigned int chunkToProcess = 0;
     MPI_Status status;
 
     do {
+        std::cout << "esclavo" << std::endl;
+        if (config.savingEnergy) {
+            saving.checkSleep();
+        }
         // First send message to master to ask for a job, and wait for job
         MPI_Send(NULL, 0, MPI_INT, 0, TAG_ASK_FOR_JOB, MPI_COMM_WORLD);
         MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -163,9 +175,11 @@ int main(int argc, char* argv[]) {
             saving.checkEnergyPrice();
         }
 
-        if (config.savingEnergy) {
-            saving.checkSleep();
-        }
+        // Check if saving energy param is true and if it is, check if has sleep time to sleep
+        // if (config.savingEnergy) {
+        //     saving.checkSleep();
+        // }
+
         // Vars for use in both modes
         vector<float> dataTraining, dataTest;
         vector<unsigned int> labelsTraining, labelsTest, MRMR;
@@ -192,12 +206,14 @@ int main(int argc, char* argv[]) {
 
         } else if (config.mode == "hetero") {
             // Mode hetero for heterogeneous platforms, dynamic balancing
-            if (!rank) {
-                start = MPI_Wtime();
-                bestHyperParams = master(config);
-                end = MPI_Wtime();
-            } else {
-                slave(dataTraining, dataTest, labelsTraining, labelsTest, config);
+            while (true) {
+                if (!rank) {
+                    start = MPI_Wtime();
+                    bestHyperParams = master(config, saving);
+                    end = MPI_Wtime();
+                } else {
+                    slave(dataTraining, dataTest, labelsTraining, labelsTest, config, saving);
+                }
             }
         }
 

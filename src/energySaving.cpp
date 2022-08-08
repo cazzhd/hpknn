@@ -134,6 +134,12 @@ EnergyAwareClientAPI::EnergyAwareClientAPI(const char *host, int port) {
     this->initSSL();
 }
 
+void EnergyAwareClientAPI::closeConnection() {
+    SSL_shutdown(this->ssl);
+    SSL_free(this->ssl);
+    close(this->sock);
+}
+
 Energy::Energy() {
     struct_mapping::reg(&Energy::date, "date");
     struct_mapping::reg(&Energy::hour, "hour");
@@ -143,16 +149,18 @@ Energy::Energy() {
     struct_mapping::reg(&Energy::price, "price");
     struct_mapping::reg(&Energy::units, "units");
 
-    client = new EnergyAwareClientAPI("api.preciodelaluz.org", 443);
+    // this->client = new EnergyAwareClientAPI("api.preciodelaluz.org", 443);
 }
 
 Energy::~Energy() {}
 
 void Energy::fetchEnergyPriceNow() {
+    this->client = new EnergyAwareClientAPI("api.preciodelaluz.org", 443);
     std::string request = "GET /v1/prices/now?zone=PCB HTTP/1.1\r\nHost: api.preciodelaluz.org\r\nConnection: close\r\n\r\n";
-    client->sendPackage(request.c_str());
-    std::istringstream is(client->recvPackage());
+    this->client->sendPackage(request.c_str());
+    std::istringstream is(this->client->recvPackage());
     struct_mapping::map_json_to_struct(*this, is);
+    this->client->closeConnection();
 }
 
 void Energy::waitUntilInitializeData() {
@@ -171,7 +179,7 @@ void Energy::checkSleep() {
 
 void Energy::checkEnergyPrice() {
     while (true) {
-        // printf("Thread main checking energy price\n");
+        printf("Thread main checking energy price\n");
         this->fetchEnergyPriceNow();
         sleepThread();
     }
@@ -180,14 +188,15 @@ void Energy::checkEnergyPrice() {
 void Energy::sleepThread(bool isSlave) {
     using std::chrono::system_clock;
     std::time_t tt = system_clock::to_time_t(system_clock::now());
+    std::string name = isSlave ? "Slave" : "Master";
 
     struct std::tm *ptm = std::localtime(&tt);
-    std::cout << "Current time: " << std::put_time(ptm, "%X") << '\n';
+    std::cout << name << " - current time: " << std::put_time(ptm, "%X") << '\n';
 
     ++ptm->tm_hour;
     ptm->tm_min = 0;
     ptm->tm_sec = isSlave ? 5 : 0;
-    std::cout << "Waiting for: " << std::put_time(ptm, "%X") << '\n';
+    std::cout << name << " - waiting for: " << std::put_time(ptm, "%X") << '\n';
     std::this_thread::sleep_until(system_clock::from_time_t(mktime(ptm)));
 }
 

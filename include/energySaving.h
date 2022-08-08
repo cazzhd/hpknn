@@ -27,6 +27,7 @@
 #include <openssl/ssl.h>
 #include <stdio.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #include <string>
 
@@ -93,6 +94,11 @@ class EnergyAwareClientAPI {
      * @return string
      */
     std::string recvPackage();
+
+    /**
+     * @brief Close the socket
+     */
+    void closeConnection();
 };
 
 /**
