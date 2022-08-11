@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "config.h"
+#include "energySaving.h"
 
 /******************************** Constants *******************************/
 
@@ -108,7 +109,8 @@ std::pair<unsigned int, unsigned int> getBestHyperParamsHomogeneous(unsigned sho
                                                                                               unsigned int,
                                                                                               unsigned int,
                                                                                               unsigned int),
-                                                                    const Config& config);
+                                                                    const Config& config,
+                                                                    Energy& saving);
 
 /**
  * @brief Get the Best K object

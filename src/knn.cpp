@@ -92,7 +92,8 @@ std::pair<unsigned int, unsigned int> getBestHyperParamsHomogeneous(unsigned sho
                                                                                               unsigned int,
                                                                                               unsigned int,
                                                                                               unsigned int),
-                                                                    const Config& config) {
+                                                                    const Config& config,
+                                                                    Energy& saving) {
     unsigned int bestK = 0, bestNFeatures = 0, bestAccuracy = 0;
 
     // Get rank MPI
@@ -102,6 +103,10 @@ std::pair<unsigned int, unsigned int> getBestHyperParamsHomogeneous(unsigned sho
     // Strided version
     if (config.stridedHomo) {
         for (unsigned int f = 1 + rank; f <= config.maxFeatures; f += size) {
+            if (config.savingEnergy) {
+                saving.checkSleep();
+            }
+
             std::vector<unsigned int> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)
             for (unsigned int i = 0; i < config.nTuples; ++i) {
@@ -126,6 +131,8 @@ std::pair<unsigned int, unsigned int> getBestHyperParamsHomogeneous(unsigned sho
     } else {
         unsigned int sizePerProcess = config.maxFeatures / size;
         for (unsigned int f = 1 + (sizePerProcess * rank); f <= sizePerProcess * (rank + 1); ++f) {
+            if (config.savingEnergy)
+                saving.checkSleep();
             std::vector<unsigned int> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)
             for (unsigned int i = 0; i < config.nTuples; ++i) {

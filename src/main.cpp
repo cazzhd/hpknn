@@ -166,19 +166,23 @@ int main(int argc, char* argv[]) {
     // Initialize the energy to save the energy consumption
     Energy saving;
 
-    omp_set_max_active_levels(2);
+    omp_set_nested(1);
+    // omp_set_max_active_levels(2);
 #pragma omp parallel num_threads(2) if (config.savingEnergy)
     {
+        int np = omp_get_num_threads();
+        int iam = omp_get_thread_num();
         // printf thread id
+        printf("Hybrid: Hello from thread %d/%d from process %d/%d on %s\n", iam, np, rank, size, processor_name);
         if (omp_get_thread_num() == 0 && config.savingEnergy) {
             // Initialize the energy saving to save the energy consumption
             saving.checkEnergyPrice();
         }
 
         // Check if saving energy param is true and if it is, check if has sleep time to sleep
-        // if (config.savingEnergy) {
-        //     saving.checkSleep();
-        // }
+        if (config.savingEnergy) {
+            saving.checkSleep();
+        }
 
         // Vars for use in both modes
         vector<float> dataTraining, dataTest;
@@ -200,9 +204,11 @@ int main(int argc, char* argv[]) {
             // printf("\nHello from process %d/%d on %s\n", rank, size, processor_name);
 
             // 3. Get the best k and number of features to use, floor(sqrt(config.nTuples)) // Recommended
-            start = MPI_Wtime();
-            bestHyperParams = getBestHyperParamsHomogeneous(1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config);
-            end = MPI_Wtime();
+            while (true) {
+                start = MPI_Wtime();
+                bestHyperParams = getBestHyperParamsHomogeneous(1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config, saving);
+                end = MPI_Wtime();
+            }
 
         } else if (config.mode == "hetero") {
             // Mode hetero for heterogeneous platforms, dynamic balancing
@@ -219,7 +225,7 @@ int main(int argc, char* argv[]) {
 
         if (!rank) {
             cout << "Best value of k: " << bestHyperParams.first << "\nBest numbers of features: " << bestHyperParams.second << endl;
-            cout << "Time getBestHyperParams: " << end - start << endl;
+            // cout << "Time getBestHyperParams: " << end - start << endl;
             // 4. To finalize get the score of the best k and number of features
             start = MPI_Wtime();
             pair<vector<unsigned int>, unsigned int> scoreTest = getScoreKNN(bestHyperParams.first, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, bestHyperParams.second, config);

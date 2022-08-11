@@ -166,12 +166,15 @@ void Energy::fetchEnergyPriceNow() {
 void Energy::waitUntilInitializeData() {
     while (this->date == "")
         ;
+    sleep(1);
 }
 
 void Energy::checkSleep() {
     // Print value date with printf
     this->waitUntilInitializeData();
     // printf("Thread slave: Date: %s\n", date.c_str());
+    // std::cout << *this << std::endl;
+    std::cout << (!(this->isCheap && this->isUnderAvg) ? "cara" : "barata") << std::endl;
     if (!(this->isCheap && this->isUnderAvg)) {
         this->sleepThread(true);
     }
