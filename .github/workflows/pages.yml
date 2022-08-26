@@ -30,7 +30,7 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Makefile
-        run: make documentacion
+        run: make documentation
       - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
         with:
