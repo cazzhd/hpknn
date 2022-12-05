@@ -103,10 +103,6 @@ std::pair<unsigned int, unsigned int> getBestHyperParamsHomogeneous(unsigned sho
     // Strided version
     if (config.stridedHomo) {
         for (unsigned int f = 1 + rank; f <= config.maxFeatures; f += size) {
-            if (config.savingEnergy) {
-                saving.checkSleep();
-            }
-
             std::vector<unsigned int> vectorAccuracies(maxValueK - minValueK + 1, 0);
 #pragma omp parallel for schedule(dynamic)
             for (unsigned int i = 0; i < config.nTuples; ++i) {

@@ -48,10 +48,9 @@ using namespace std;
  * @brief master function executed by the master process
  * managing the slaves with send jobs and receiving results using dinamyc balancing
  * @param config configuration parameters
- * @param energy saving parameters
  * @return pair of the best k and the best accuracy
  */
-pair<unsigned int, unsigned int> master(const Config& config, Energy& saving) {
+pair<unsigned int, unsigned int> master(const Config& config) {
     const unsigned int TAM = 3;
     unsigned int chunkProcessed = 0, slavesDone = 0, bestAccuracy = 0;
     pair<unsigned int, unsigned int> bestHyperParamsGlobal = make_pair(0, 0);
@@ -63,11 +62,6 @@ pair<unsigned int, unsigned int> master(const Config& config, Energy& saving) {
 
     // while (/* there are jobs unprocessed */ || /* there are slaves still working on jobs */) {
     while (slavesDone != totalSlaves) {
-        std::cout << "maestro" << std::endl;
-        if (config.savingEnergy) {
-            saving.checkSleep();
-        }
-
         // Wait for incoming slave message
         MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
         // Store rank of the slave who sent the message
@@ -120,10 +114,6 @@ void slave(vector<float>& dataTraining,
     MPI_Status status;
 
     do {
-        std::cout << "esclavo" << std::endl;
-        if (config.savingEnergy) {
-            saving.checkSleep();
-        }
         // First send message to master to ask for a job, and wait for job
         MPI_Send(NULL, 0, MPI_INT, 0, TAG_ASK_FOR_JOB, MPI_COMM_WORLD);
         MPI_Probe(0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
@@ -131,10 +121,14 @@ void slave(vector<float>& dataTraining,
         if (status.MPI_TAG == TAG_JOB_DATA) {
             // Work with data received, process it
             MPI_Recv(&chunkToProcess, 1, MPI_INT, 0, TAG_JOB_DATA, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            if (config.savingEnergy) {
+                saving.checkSleep();
+            }
             vector<unsigned int> bestHyperParamsLocal = getBestHyperParamsHeterogeneous(chunkToProcess, 1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config);
-            // Print best hyperparameters
             // Send result to master
             MPI_Send(&bestHyperParamsLocal[0], bestHyperParamsLocal.size(), MPI_UNSIGNED, 0, TAG_RESULT, MPI_COMM_WORLD);
+
+            printf("Job done");
         } else {
             // If the master sent a stop message, stop
             MPI_Recv(NULL, 0, MPI_INT, 0, TAG_STOP, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
@@ -166,21 +160,23 @@ int main(int argc, char* argv[]) {
     // Initialize the energy to save the energy consumption
     Energy saving;
 
+    bool isMaster = (config.mode == "hetero" && rank == 0);
+
     omp_set_nested(1);
     // omp_set_max_active_levels(2);
-#pragma omp parallel num_threads(2) if (config.savingEnergy)
+#pragma omp parallel num_threads(2) if (config.savingEnergy && !isMaster)
     {
         int np = omp_get_num_threads();
         int iam = omp_get_thread_num();
         // printf thread id
         printf("Hybrid: Hello from thread %d/%d from process %d/%d on %s\n", iam, np, rank, size, processor_name);
-        if (omp_get_thread_num() == 0 && config.savingEnergy) {
+        if (omp_get_thread_num() == 0 && config.savingEnergy && !isMaster) {
             // Initialize the energy saving to save the energy consumption
             saving.checkEnergyPrice();
         }
 
         // Check if saving energy param is true and if it is, check if has sleep time to sleep
-        if (config.savingEnergy) {
+        if (config.savingEnergy && !isMaster) {
             saving.checkSleep();
         }
 
@@ -206,6 +202,9 @@ int main(int argc, char* argv[]) {
             // 3. Get the best k and number of features to use, floor(sqrt(config.nTuples)) // Recommended
             while (true) {
                 start = MPI_Wtime();
+                if (config.savingEnergy) {
+                    saving.checkSleep();
+                }
                 bestHyperParams = getBestHyperParamsHomogeneous(1, config.nTuples, dataTraining, dataTest, labelsTraining, labelsTest, euclideanDistance, config, saving);
                 end = MPI_Wtime();
             }
@@ -215,11 +214,12 @@ int main(int argc, char* argv[]) {
             while (true) {
                 if (!rank) {
                     start = MPI_Wtime();
-                    bestHyperParams = master(config, saving);
+                    bestHyperParams = master(config);
                     end = MPI_Wtime();
                 } else {
                     slave(dataTraining, dataTest, labelsTraining, labelsTest, config, saving);
                 }
+                MPI_Barrier(MPI_COMM_WORLD);
             }
         }
 

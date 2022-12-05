@@ -18,6 +18,7 @@
 /********************************* Includes *******************************/
 #include "energySaving.h"
 
+#include <mpi.h>
 #include <string.h>
 
 #include <chrono>
@@ -174,7 +175,7 @@ void Energy::checkSleep() {
     this->waitUntilInitializeData();
     // printf("Thread slave: Date: %s\n", date.c_str());
     // std::cout << *this << std::endl;
-    std::cout << (!(this->isCheap && this->isUnderAvg) ? "cara" : "barata") << std::endl;
+    // std::cout << (!(this->isCheap && this->isUnderAvg) ? "cara" : "barata") << std::endl;
     if (!(this->isCheap && this->isUnderAvg)) {
         this->sleepThread(true);
     }
@@ -182,6 +183,7 @@ void Energy::checkSleep() {
 
 void Energy::checkEnergyPrice() {
     while (true) {
+        this->date = "";
         printf("Thread main checking energy price\n");
         this->fetchEnergyPriceNow();
         sleepThread();
@@ -194,12 +196,11 @@ void Energy::sleepThread(bool isSlave) {
     std::string name = isSlave ? "Slave" : "Master";
 
     struct std::tm *ptm = std::localtime(&tt);
-    std::cout << name << " - current time: " << std::put_time(ptm, "%X") << '\n';
 
     ++ptm->tm_hour;
     ptm->tm_min = 0;
     ptm->tm_sec = isSlave ? 5 : 0;
-    std::cout << name << " - waiting for: " << std::put_time(ptm, "%X") << '\n';
+    std::cout << name << MPI::COMM_WORLD.Get_rank() << "/" << MPI::COMM_WORLD.Get_size() << " - current time: " << std::put_time(ptm, "%X") << " - waiting for: " << std::put_time(ptm, "%X") << '\n';
     std::this_thread::sleep_until(system_clock::from_time_t(mktime(ptm)));
 }
 
